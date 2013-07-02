@@ -20,6 +20,7 @@ public:
     sem_t wfttr;
 
     Sched(int _K, int _P);
+    void loadtasklist(string tasklist);
     double try_getpressure(int u);
     double try_getmissrate(int u);
     int addtask(string name, string cmd, string datafile);

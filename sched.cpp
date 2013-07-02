@@ -2,6 +2,9 @@
 #define SCHED_CPP
 #include "sched.h"
 Sched::Sched(int _K, int _P){
+
+    cachesize = 4096;
+
     K = _K;
     P = _P;
     nexttaskid = 0;
@@ -10,11 +13,21 @@ Sched::Sched(int _K, int _P){
 
     sem_init(&pmtx, 0, P);
     sem_init(&arrmtx, 0, 1);
-    sem_init(&wfttr, 0, 1);
+    sem_init(&wfttr, 0, 0);
+}
+void Sched::loadtasklist(string tasklist){
+    ifstream fin(tasklist.c_str());
+    string cmd;
+    string datafile;
+    while (std::getline(fin, cmd)){
+        std::getline(fin, datafile);
+        addtask(cmd, cmd, datafile);
+    }
+    fin.close();
 }
 double Sched::try_getpressure(int u){
     double ft = 0;
-    for (unsigned i = 0; i<keep.size(); i++){
+    for (unsigned i = 0; i<running.size(); i++){
         ft += 1/task[running[i]].pressure(cachesize);
     }
     ft += 1/task[u].pressure(cachesize);
@@ -25,8 +38,8 @@ double Sched::try_getpressure(int u){
 double Sched::try_getmissrate(int u){
     double ft = try_getpressure(u);
     double mr = 0;
-    for (unsigned i = 0; i<keep.size(); i++){
-        mr += task[i].sensitive(ft);
+    for (unsigned i = 0; i<running.size(); i++){
+        mr += task[running[i]].sensitive(ft);
     }
     mr += task[u].sensitive(ft);
     return mr;
@@ -34,7 +47,7 @@ double Sched::try_getmissrate(int u){
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
-    //p.init(datafile);
+    p.init(datafile);
     task.push_back(p);
     return id;
 }
@@ -47,6 +60,7 @@ void Sched::taskfinish(int k){
             break;
         }
     }
+    cerr<<"           "<<k<<" finish"<<endl;
     sem_post(&arrmtx);
     sem_post(&pmtx);
 }
@@ -70,7 +84,6 @@ void Sched::tryrun(){
         return;
     }
     vector<int> get;
-    /*
     double runningpres = 0;
     for (unsigned i = 0; i<running.size(); i++){
         runningpres += task[running[i]].pressure(cachesize);
@@ -105,10 +118,11 @@ void Sched::tryrun(){
     double sens = task[fd].sensitive(try_getpressure(fd));
     history_pressure = (history_pressure * (P+P-1)+pres)/(P+P);
     history_sensitive = (history_sensitive * (P+P-1)+sens)/(P+P);
-    */
     //for debug
+    /*
     get = keep;
     int fd = get[0];
+    */
 
     for (vector<int>::iterator it = keep.begin(); it!=keep.end(); it++){
         if (*it == fd){
@@ -117,11 +131,10 @@ void Sched::tryrun(){
         }
     }
     running.push_back(fd);
-    cerr<<"task "<<fd<<" prepare to run, cmd = "<<task[fd].cmd<<endl;
-    cerr<<"running size = "<<running.size()<<endl;
+    cerr<<fd<<" prepare to run, cmd = "<<task[fd].cmd<<endl;
 
-    sem_wait(&wfttr);
     pthread_create(&task[fd].thread, NULL, realrun, this);
+    sem_wait(&wfttr);
 }
 void* Sched::realrun(void *arg){
     Sched &s = *((Sched*)arg);

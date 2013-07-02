@@ -1,6 +1,7 @@
 #ifndef _HEAD_H
 #define _HEAD_H
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <algorithm>
 #include <cstdlib>
