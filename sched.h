@@ -17,6 +17,7 @@ public:
 
     sem_t pmtx;
     sem_t arrmtx;
+    sem_t wfttr;
 
     Sched(int _K, int _P);
     double try_getpressure(int u);

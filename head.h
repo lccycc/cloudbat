@@ -1,7 +1,7 @@
 #ifndef _HEAD_H
 #define _HEAD_H
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 #include <cstdlib>
 #include <cmath>

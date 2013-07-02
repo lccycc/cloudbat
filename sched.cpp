@@ -10,6 +10,7 @@ Sched::Sched(int _K, int _P){
 
     sem_init(&pmtx, 0, P);
     sem_init(&arrmtx, 0, 1);
+    sem_init(&wfttr, 0, 1);
 }
 double Sched::try_getpressure(int u){
     double ft = 0;
@@ -33,7 +34,7 @@ double Sched::try_getmissrate(int u){
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
-    p.init(datafile);
+    //p.init(datafile);
     task.push_back(p);
     return id;
 }
@@ -47,7 +48,7 @@ void Sched::taskfinish(int k){
         }
     }
     sem_post(&arrmtx);
-    trypush();
+    sem_post(&pmtx);
 }
 void Sched::trypush(){
     do{
@@ -56,6 +57,7 @@ void Sched::trypush(){
         while (keep.size() < K && nexttaskid < task.size()){
             int id = nexttaskid++;
             keep.push_back(id);
+            cerr<<id<<" push into keep"<<endl;
         }
         if (keep.size()){
             tryrun();
@@ -64,7 +66,11 @@ void Sched::trypush(){
     }while (keep.size() || nexttaskid < task.size());
 }
 void Sched::tryrun(){
+    if (keep.empty()){
+        return;
+    }
     vector<int> get;
+    /*
     double runningpres = 0;
     for (unsigned i = 0; i<running.size(); i++){
         runningpres += task[running[i]].pressure(cachesize);
@@ -99,6 +105,10 @@ void Sched::tryrun(){
     double sens = task[fd].sensitive(try_getpressure(fd));
     history_pressure = (history_pressure * (P+P-1)+pres)/(P+P);
     history_sensitive = (history_sensitive * (P+P-1)+sens)/(P+P);
+    */
+    //for debug
+    get = keep;
+    int fd = get[0];
 
     for (vector<int>::iterator it = keep.begin(); it!=keep.end(); it++){
         if (*it == fd){
@@ -107,11 +117,16 @@ void Sched::tryrun(){
         }
     }
     running.push_back(fd);
+    cerr<<"task "<<fd<<" prepare to run, cmd = "<<task[fd].cmd<<endl;
+    cerr<<"running size = "<<running.size()<<endl;
+
+    sem_wait(&wfttr);
     pthread_create(&task[fd].thread, NULL, realrun, this);
 }
 void* Sched::realrun(void *arg){
     Sched &s = *((Sched*)arg);
     int id = s.running[s.running.size()-1];
+    sem_post(&s.wfttr);
     system(s.task[id].cmd.c_str());
     s.taskfinish(id);
 }
