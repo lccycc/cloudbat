@@ -1,6 +1,9 @@
 #include <stdio.h>      /* printf, scanf, NULL */
 #include <stdlib.h>     /* malloc, free, rand */
+#include <assert.h>
 #include <math.h>
+#include <iostream>
+using namespace std;
 
 unsigned lfsr;
 #define MASK 0xd0000001u
@@ -11,21 +14,30 @@ unsigned int dump[100];
 
 #define r (rand%footprint_size)
 
-int main()
+int main(int argc, char** argv)
 {
 	unsigned int* data_chunk;
 	lfsr=11;
-	footprint_size=256*6144;//1M-->4M keep smashing 4MB data
-	printf("smash 4*256*6144B space\n");	
+
+    int level = 5;
+    if (argc >=2){
+        sscanf(argv[1], "%d", &level);
+    }else{
+        cerr<<"warning: default level = 5"<<endl;
+    }
+
+    footprint_size = 1024*256*level;
+	//footprint_size=256*6144;//1M-->4M keep smashing 4MB data
+	//printf("smash 4*256*6144B space\n");
 
 	unsigned long x;
 	x = powl(2,32);
-	
-	data_chunk = malloc(x*sizeof(unsigned int));
-	
-	
-	while(1)
-	{
+
+	data_chunk = (unsigned *)malloc(x*sizeof(unsigned int));
+    assert(data_chunk);
+
+
+    for (int i = 0; i<5000000; i++){
 		dump[0]+=data_chunk[r]++;
 		dump[1]+=data_chunk[r]++;
 		dump[2]+=data_chunk[r]++;
@@ -36,7 +48,7 @@ int main()
 		dump[7]+=data_chunk[r]++;
 		dump[8]+=data_chunk[r]++;
 		dump[9]+=data_chunk[r]++;
-		
+
 		dump[10]+=data_chunk[r]++;
 		dump[11]+=data_chunk[r]++;
 		dump[12]+=data_chunk[r]++;
@@ -47,7 +59,7 @@ int main()
 		dump[17]+=data_chunk[r]++;
 		dump[18]+=data_chunk[r]++;
 		dump[19]+=data_chunk[r]++;
-		
+
 		dump[20]+=data_chunk[r]++;
 		dump[21]+=data_chunk[r]++;
 		dump[22]+=data_chunk[r]++;
@@ -58,7 +70,7 @@ int main()
 		dump[27]+=data_chunk[r]++;
 		dump[28]+=data_chunk[r]++;
 		dump[29]+=data_chunk[r]++;
-		
+
 		dump[30]+=data_chunk[r]++;
 		dump[31]+=data_chunk[r]++;
 		dump[32]+=data_chunk[r]++;
@@ -69,7 +81,7 @@ int main()
 		dump[37]+=data_chunk[r]++;
 		dump[38]+=data_chunk[r]++;
 		dump[39]+=data_chunk[r]++;
-		
+
 		dump[40]+=data_chunk[r]++;
 		dump[41]+=data_chunk[r]++;
 		dump[42]+=data_chunk[r]++;
@@ -113,7 +125,7 @@ int main()
 		dump[77]+=data_chunk[r]++;
 		dump[78]+=data_chunk[r]++;
 		dump[79]+=data_chunk[r]++;
-		
+
 		dump[80]+=data_chunk[r]++;
 		dump[81]+=data_chunk[r]++;
 		dump[82]+=data_chunk[r]++;
@@ -151,5 +163,6 @@ int main()
 		{mid[i]=scalar*bw_data[i];}
 
 	}*/
+    delete[] data_chunk;
 	return 0;
 }
