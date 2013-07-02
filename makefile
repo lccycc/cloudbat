@@ -1,2 +1,2 @@
 All: present.h sched.h sched.cpp 
-	g++ sched.cpp -o ./esched
+	g++ -std=c++11 -lpthread present.cpp sched.cpp main.cpp -o ./emain

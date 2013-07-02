@@ -15,6 +15,9 @@ public:
     double history_pressure;
     double history_sensitive;
 
+    sem_t pmtx;
+    sem_t arrmtx;
+
     Sched(int _K, int _P);
     double try_getpressure(int u);
     double try_getmissrate(int u);
@@ -22,5 +25,6 @@ public:
     void taskfinish(int k);
     void trypush();
     void tryrun();
+    static void* realrun(void *arg);
 };
 #endif

@@ -11,6 +11,13 @@
 #include <assert.h>
 #include <map>
 #include <vector>
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <semaphore.h>
+#include <thread>
+#include <mutex>
+
 using namespace std;
 typedef unsigned int uint;
 typedef long long LL;

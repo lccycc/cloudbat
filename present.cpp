@@ -4,9 +4,10 @@
 Present::Present(){
     /*empty*/
 }
-Present::Present(string _name, string _cmd){
+Present::Present(string _name, string _cmd, int _id){
     name = _name;
     cmd = _cmd;
+    id = _id;
 }
 
 void Present::init(string filename){

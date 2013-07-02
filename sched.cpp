@@ -7,6 +7,9 @@ Sched::Sched(int _K, int _P){
     nexttaskid = 0;
     history_pressure = 0;
     history_sensitive = 0;
+
+    sem_init(&pmtx, 0, P);
+    sem_init(&arrmtx, 0, 1);
 }
 double Sched::try_getpressure(int u){
     double ft = 0;
@@ -19,7 +22,7 @@ double Sched::try_getpressure(int u){
     return ft;
 }
 double Sched::try_getmissrate(int u){
-    double ft = try_getpresure(u);
+    double ft = try_getpressure(u);
     double mr = 0;
     for (unsigned i = 0; i<keep.size(); i++){
         mr += task[i].sensitive(ft);
@@ -29,13 +32,13 @@ double Sched::try_getmissrate(int u){
 }
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
-    Present p(name, cmd);
+    Present p(name, cmd, id);
     p.init(datafile);
     task.push_back(p);
-    trypush();
     return id;
 }
 void Sched::taskfinish(int k){
+    sem_wait(&arrmtx);
     for (vector<int>::iterator it = running.begin();
                 it != running.end(); it++){
         if (*it == k){
@@ -43,27 +46,32 @@ void Sched::taskfinish(int k){
             break;
         }
     }
+    sem_post(&arrmtx);
     trypush();
 }
 void Sched::trypush(){
-    bool nextloop = true;
-    while (nextloop){
-        nextloop = false;
+    do{
+        sem_wait(&pmtx);
+        sem_wait(&arrmtx);
         while (keep.size() < K && nexttaskid < task.size()){
             int id = nexttaskid++;
             keep.push_back(id);
-            nextloop = true;
         }
-        while (running.size() < P && keep.size()){
+        if (keep.size()){
             tryrun();
-            nextloop = true;
         }
-    }
+        sem_post(&arrmtx);
+    }while (keep.size() || nexttaskid < task.size());
 }
 void Sched::tryrun(){
     vector<int> get;
+    double runningpres = 0;
+    for (unsigned i = 0; i<running.size(); i++){
+        runningpres += task[running[i]].pressure(cachesize);
+    }
     for (unsigned i = 0; i<keep.size(); i++){
-        if (task[keep[i]].pressure(cachesize) > history_pressure){
+        if ((task[keep[i]].pressure(cachesize)+runningpres)
+                /(running.size()+1)  > history_pressure){
             get.push_back(keep[i]);
         }
     }
@@ -82,9 +90,9 @@ void Sched::tryrun(){
     int fd = -1;
     for (unsigned i = 0; i< get.size(); i++){
         double mr = try_getmissrate(get[i]);
-        if (fd == -1 || minmiss > ms){
+        if (fd == -1 || minmiss > mr){
             fd = get[i];
-            minmiss = ms;
+            minmiss = mr;
         }
     }
     double pres = task[fd].pressure(cachesize);
@@ -99,6 +107,12 @@ void Sched::tryrun(){
         }
     }
     running.push_back(fd);
-    //todo: run it in terminal
+    pthread_create(&task[fd].thread, NULL, realrun, this);
+}
+void* Sched::realrun(void *arg){
+    Sched &s = *((Sched*)arg);
+    int id = s.running[s.running.size()-1];
+    system(s.task[id].cmd.c_str());
+    s.taskfinish(id);
 }
 #endif
