@@ -15,11 +15,16 @@ public:
     double history_pressure;
     double history_sensitive;
 
+    double systartime;
+
     sem_t pmtx;
     sem_t arrmtx;
     sem_t wfttr;
 
     Sched(int _K, int _P);
+    double getsystime();
+    double gettime();
+
     void loadtasklist(string tasklist);
     double try_getpressure(int u);
     double try_getmissrate(int u);
@@ -28,5 +33,8 @@ public:
     void trypush();
     void tryrun();
     static void* realrun(void *arg);
+    static int getpid(string cmd);
+    void pausetask(int id);
+    void fgtask(int id);
 };
 #endif

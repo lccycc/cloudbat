@@ -1,11 +1,13 @@
-./bubbletest/eup 1
-./bubbletest/data/eup_1.dat
 ./bubbletest/eup 2
 ./bubbletest/data/eup_2.dat
 ./bubbletest/eup 3
 ./bubbletest/data/eup_3.dat
 ./bubbletest/eup 4
 ./bubbletest/data/eup_4.dat
+./bubbletest/eup 1
+./bubbletest/data/eup_1.dat
+./bubbletest/eup 10
+./bubbletest/data/eup_10.dat
 ./bubbletest/eup 5
 ./bubbletest/data/eup_5.dat
 ./bubbletest/eup 6
@@ -16,8 +18,6 @@
 ./bubbletest/data/eup_8.dat
 ./bubbletest/eup 9
 ./bubbletest/data/eup_9.dat
-./bubbletest/eup 10
-./bubbletest/data/eup_10.dat
 ./bubbletest/estream 1
 ./bubbletest/data/estream_1.dat
 ./bubbletest/estream 2

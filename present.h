@@ -9,6 +9,7 @@ public:
     string cmd;
     pthread_t thread;
     int id;
+    int pid;
     double mr[MaxCache];//miss rate
     double ft[MaxCache];//fill time
     LL N, M;

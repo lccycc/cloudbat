@@ -11,9 +11,19 @@ Sched::Sched(int _K, int _P){
     history_pressure = 0;
     history_sensitive = 0;
 
+    systartime = getsystime();
+
     sem_init(&pmtx, 0, P);
     sem_init(&arrmtx, 0, 1);
     sem_init(&wfttr, 0, 0);
+}
+double Sched::getsystime(){
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec/1000000.0;
+}
+double Sched::gettime(){
+    return getsystime()-systartime;
 }
 void Sched::loadtasklist(string tasklist){
     ifstream fin(tasklist.c_str());
@@ -60,7 +70,7 @@ void Sched::taskfinish(int k){
             break;
         }
     }
-    cerr<<"           "<<k<<" finish"<<endl;
+    cerr<<"           "<<k<<" finish, "<<gettime()<<endl;
     sem_post(&arrmtx);
     sem_post(&pmtx);
 }
@@ -78,6 +88,9 @@ void Sched::trypush(){
         }
         sem_post(&arrmtx);
     }while (keep.size() || nexttaskid < task.size());
+    for (unsigned i = 0; i<task.size(); i++){
+        pthread_join(task[i].thread, NULL);
+    }
 }
 void Sched::tryrun(){
     if (keep.empty()){
@@ -139,8 +152,30 @@ void Sched::tryrun(){
 void* Sched::realrun(void *arg){
     Sched &s = *((Sched*)arg);
     int id = s.running[s.running.size()-1];
+    s.task[id].pid = getpid(s.task[id].cmd);
     sem_post(&s.wfttr);
     system(s.task[id].cmd.c_str());
     s.taskfinish(id);
+}
+int Sched::getpid(string cmd){
+    cmd = " " + cmd + "\n";
+    FILE *fp = popen("ps -ao pid,command", "r");
+    assert(fp);
+    int pid;
+    char pscmd[500];
+    while (fscanf(fp, "%d", &pid)!=EOF){
+        fgets(pscmd, 488, fp);
+        if (strcmp(cmd.c_str(), pscmd) == 0){
+            break;
+        }
+    }
+    fclose(fp);
+    return pid;
+}
+void Sched::pausetask(int id){
+    kill(task[id].pid, 19);
+}
+void Sched::fgtask(int id){
+    kill(task[id].pid, 18);
 }
 #endif

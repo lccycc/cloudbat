@@ -1,7 +1,7 @@
 #include "head.h"
 #include "present.h"
 #include "sched.h"
-Sched sched(4,2);
+Sched sched(1,2);
 int main(){
     /*
     for (int i = 10; i>=1; i--){
