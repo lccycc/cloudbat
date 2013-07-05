@@ -54,6 +54,20 @@ double Sched::try_getmissrate(int u){
     mr += task[u].sensitive(ft);
     return mr;
 }
+double Sched::getworkload(vector<int> &ids){
+    double ft = 0;
+    for (unsinged i = 0; i<ids.size(); i++){
+        ft += 1/task[ids[i]].pressure(cachesize);
+    }
+    assert(ft>0);
+    ft = 1/ft;
+    doublem mr = 0;
+    for (unsigned i = 0; i<ids.size(); i++){
+        mr += task[ids[i]].sensitive(ft);
+    }
+    return mr;
+}
+
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
@@ -178,4 +192,58 @@ void Sched::pausetask(int id){
 void Sched::fgtask(int id){
     kill(task[id].pid, 18);
 }
+
+
+vector<vector<int> > Sched::timetable(vector<int> list){
+    int K = list.size();
+    int GCD = gcd(K, P);
+    int D = P/GCD;
+    int psperK =  K/P;
+    vector<pair<LL, double> > lev0;
+    vector<LL> que;
+    map<LL, double> fus;
+    map<LL, int> last;
+    for (i = 0; i<(1<<K); i++){
+        if (count1bit(i) != P){
+            continue;
+        }
+        vector<int> ids;
+        for (int j = 0; j<K; j++){
+            if (i & (1<<j)){
+                ids.push_back(list[j]);
+            }
+        }
+        double mr = getworkload(ids);
+        lev0.push_back(make_pair(i, mr));
+        que.push_back(i);
+        fus[i] = mr;
+    }
+    for (unsigned head = 0; head < que.size(); head++){
+        int u = que[head];
+        int uy = fus[u];
+        for (unsigned i = 0; i<lev0.size(); i++){
+            int x = lev0[i].first;
+            if (x & u){
+                continue;
+            }
+            double y = lev0[i].second;
+            int v = (x | u);
+            if (fus.find(v) == fus.end()){
+                fus[v] = y;
+                last[v] = x;
+                que.push_back(v);
+            }else{
+                double vy = fus[v];
+                if (vy > uy + y){
+                    fus[v] = uy + y;
+                    last[v] = x;
+                }
+            }
+        }
+    }
+    int R = K%P;
+    int RD = R/GCD:
+
+
+
 #endif

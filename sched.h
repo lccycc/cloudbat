@@ -1,5 +1,6 @@
 #include "head.h"
 #include "present.h"
+#include "mth.h"
 #ifndef SCHED_H
 #define SCHED_H
 class Sched{
