@@ -29,6 +29,7 @@ public:
     void loadtasklist(string tasklist);
     double try_getpressure(int u);
     double try_getmissrate(int u);
+    double getworkload(vector<int> &ids);
     int addtask(string name, string cmd, string datafile);
     void taskfinish(int k);
     void trypush();
@@ -37,5 +38,6 @@ public:
     static int getpid(string cmd);
     void pausetask(int id);
     void fgtask(int id);
+    vector<int> timetable(vector<int> list);
 };
 #endif

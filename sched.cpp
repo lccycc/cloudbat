@@ -56,12 +56,12 @@ double Sched::try_getmissrate(int u){
 }
 double Sched::getworkload(vector<int> &ids){
     double ft = 0;
-    for (unsinged i = 0; i<ids.size(); i++){
+    for (unsigned i = 0; i<ids.size(); i++){
         ft += 1/task[ids[i]].pressure(cachesize);
     }
     assert(ft>0);
     ft = 1/ft;
-    doublem mr = 0;
+    double mr = 0;
     for (unsigned i = 0; i<ids.size(); i++){
         mr += task[ids[i]].sensitive(ft);
     }
@@ -194,16 +194,19 @@ void Sched::fgtask(int id){
 }
 
 
-vector<vector<int> > Sched::timetable(vector<int> list){
+vector<int> Sched::timetable(vector<int> list){
     int K = list.size();
+    assert(K<31);
+    assert(K>=P);
     int GCD = gcd(K, P);
     int D = P/GCD;
     int psperK =  K/P;
-    vector<pair<LL, double> > lev0;
-    vector<LL> que;
-    map<LL, double> fus;
-    map<LL, int> last;
-    for (i = 0; i<(1<<K); i++){
+    vector<pair<int, double> > lev0;
+    vector<int> que;
+    map<int, double> fus;
+    map<int, int> last;
+    vector<pair<int, double> > levF;
+    for (int i = 0; i<(1<<K); i++){
         if (count1bit(i) != P){
             continue;
         }
@@ -229,7 +232,7 @@ vector<vector<int> > Sched::timetable(vector<int> list){
             double y = lev0[i].second;
             int v = (x | u);
             if (fus.find(v) == fus.end()){
-                fus[v] = y;
+                fus[v] = uy + y;
                 last[v] = x;
                 que.push_back(v);
             }else{
@@ -242,7 +245,68 @@ vector<vector<int> > Sched::timetable(vector<int> list){
         }
     }
     int R = K%P;
-    int RD = R/GCD:
+    int RD = R/GCD;
+    LL maskK = (1<<K)-1;
+    for (int i = que.size()-1; i>=0 && count1bit(que[i]) == K-R; i--){
+        levF.push_back(make_pair(que[i]^maskK, fus[i]));
+    }
+    vector<LL> queRD;
+    map<LL, double> fusRD;
+    map<LL, int> lastRD;
+    queRD.push_back(0);
+    fusRD[0] = 0;
+    for (unsigned head = 0; head < queRD.size(); head++){
+        LL u = queRD[head];
+        double uy = fusRD[u];
+        for (unsigned i = 0; i<levF.size(); i++){
+            int x = levF[i].first;
+            double y = levF[i].second;
+            LL v = tryadd(u, x, K, RD);
+            if (v == 0){
+                continue;
+            }
+            if (fusRD.find(v) == fusRD.end()){
+                fusRD[v] = y;
+                lastRD[v] = x;
+                queRD.push_back(v);
+            }else{
+                double vy = fusRD[v];
+                if (vy > uy + y){
+                    fusRD[v] = uy + y;
+                    lastRD[v] = x;
+                }
+            }
+        }
+    }
+    //now find solution
+    LL finalx = 1;
+    for (int i = 0; i<K; i++){
+        finalx*=(D+1);
+    }
+    finalx--;
+    assert(finalx == queRD[queRD.size()-1]);
+    vector<int> seq;
+    while (finalx != 0){
+        int x = lastRD[finalx];
+        finalx = tryadd(finalx, x, K, RD, -1);
+
+        x ^= maskK;
+        while (x != 0){
+            int dx = last[x];
+            assert(dx);
+            assert((x & dx) == dx);
+            seq.push_back(dx);
+            x ^= dx;
+        }
+    }
+    return seq;
+}
+
+
+
+
+
+
 
 
 
