@@ -1,7 +1,8 @@
 #include "head.h"
 #include "present.h"
 #include "sched.h"
-Sched sched(1,2);
+//Sched(K, P);
+Sched sched(7,5);
 int main(){
     /*
     for (int i = 10; i>=1; i--){
@@ -12,7 +13,11 @@ int main(){
     }
     */
     sched.loadtasklist(string("bubbletest/data/tasklist"));
-    sched.trypush();
+    //sched.trypush();
+    for (int i = 0; i<sched.K+sched.P; i++){
+        sched.keep.push_back(i);
+    }
+    sched.gettimetable(sched.keep);
 
     return 0;
 }

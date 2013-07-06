@@ -151,22 +151,36 @@ void Sched::tryrun(){
     int fd = get[0];
     */
 
+    runtask(fd);
+}
+void Sched::runtask(int u){
     for (vector<int>::iterator it = keep.begin(); it!=keep.end(); it++){
-        if (*it == fd){
+        if (*it == u){
             keep.erase(it);
             break;
         }
     }
-    running.push_back(fd);
-    cerr<<fd<<" prepare to run, cmd = "<<task[fd].cmd<<endl;
-
-    pthread_create(&task[fd].thread, NULL, realrun, this);
-    sem_wait(&wfttr);
+    running.push_back(u);
+    cerr<<u<<" prepare to run, cmd = "<<task[u].cmd<<endl;
+    if (task[u].pid == -1){
+        void* arg[2];
+        arg[0] = this;
+        arg[1] = &u;
+        pthread_create(&task[u].thread, NULL, runthread, arg);
+        sem_wait(&wfttr);
+        while ((task[u].pid = getpid(task[u].cmd))==-1){
+            usleep(10000);
+        }
+    }else{
+        //this task is pause
+        fgtask(u);
+    }
 }
-void* Sched::realrun(void *arg){
-    Sched &s = *((Sched*)arg);
-    int id = s.running[s.running.size()-1];
-    s.task[id].pid = getpid(s.task[id].cmd);
+
+
+void* Sched::runthread(void *arg){
+    Sched &s = *((Sched*)((void**)arg)[0]);
+    int id = *((int*)((void**)arg)[1]);
     sem_post(&s.wfttr);
     system(s.task[id].cmd.c_str());
     s.taskfinish(id);
@@ -177,13 +191,18 @@ int Sched::getpid(string cmd){
     assert(fp);
     int pid;
     char pscmd[500];
+    bool findit = false;
     while (fscanf(fp, "%d", &pid)!=EOF){
         fgets(pscmd, 488, fp);
         if (strcmp(cmd.c_str(), pscmd) == 0){
+            findit = true;
             break;
         }
     }
     fclose(fp);
+    if (!findit){
+        return -1;
+    }
     return pid;
 }
 void Sched::pausetask(int id){
@@ -194,12 +213,12 @@ void Sched::fgtask(int id){
 }
 
 
-vector<int> Sched::timetable(vector<int> list){
+vector<int> Sched::gettimetable(vector<int> list){
     int K = list.size();
     assert(K<31);
     assert(K>=P);
     int GCD = gcd(K, P);
-    int D = P/GCD;
+    cerr<<"K = "<<K<<endl;
     int psperK =  K/P;
     vector<pair<int, double> > lev0;
     vector<int> que;
@@ -218,9 +237,9 @@ vector<int> Sched::timetable(vector<int> list){
         }
         double mr = getworkload(ids);
         lev0.push_back(make_pair(i, mr));
-        que.push_back(i);
-        fus[i] = mr;
     }
+    que.push_back(0);
+    fus[0] = 0;
     for (unsigned head = 0; head < que.size(); head++){
         int u = que[head];
         int uy = fus[u];
@@ -246,10 +265,12 @@ vector<int> Sched::timetable(vector<int> list){
     }
     int R = K%P;
     int RD = R/GCD;
+    cerr<<"RD = "<<RD<<endl;
     LL maskK = (1<<K)-1;
     for (int i = que.size()-1; i>=0 && count1bit(que[i]) == K-R; i--){
         levF.push_back(make_pair(que[i]^maskK, fus[i]));
     }
+    cerr<<"levF size = "<<levF.size()<<endl;
     vector<LL> queRD;
     map<LL, double> fusRD;
     map<LL, int> lastRD;
@@ -278,19 +299,28 @@ vector<int> Sched::timetable(vector<int> list){
             }
         }
     }
+    cerr<<"queRD size = "<<queRD.size()<<endl;
     //now find solution
     LL finalx = 1;
     for (int i = 0; i<K; i++){
-        finalx*=(D+1);
+        finalx*=(RD+1);
     }
     finalx--;
     assert(finalx == queRD[queRD.size()-1]);
     vector<int> seq;
+    vector<int> midseq;
     while (finalx != 0){
         int x = lastRD[finalx];
         finalx = tryadd(finalx, x, K, RD, -1);
 
         x ^= maskK;
+        midseq.push_back(x);
+    }
+    if (midseq.size() == 0){
+        midseq.push_back(maskK);
+    }
+    for (unsigned i = 0; i<midseq.size(); i++){
+        int x = midseq[i];
         while (x != 0){
             int dx = last[x];
             assert(dx);
@@ -299,15 +329,60 @@ vector<int> Sched::timetable(vector<int> list){
             x ^= dx;
         }
     }
+    cerr<<"---timetable size: "<<seq.size()<<endl;
+    for (signed i = 0; i<seq.size(); i++){
+        for (int j = 0; j<K; j++){
+            if (seq[i] & (1<<j)){
+                cerr<<'1';
+            }else{
+                cerr<<'0';
+            }
+        }
+        cerr<<endl;
+    }
+    cerr<<"---timetable end---"<<endl;
     return seq;
 }
+void* Sched::_timeinterrupt(void* args){
+    Sched &s = *((Sched*)args);
+    s.timeinterrupt();
+    return NULL;
+}
+void Sched::timeinterrupt(){
+    while (1){
+        sem_wait(&arrmtx);
+        if (keep.size() == 0){
+            sem_post(&arrmtx);
+            break;
+        }
+        //cut all the running thread
+        for (unsigned i = 0; i<running.size(); i++){
+            pausetask(running[i]);
+            keep.push_back(running[i]);
+        }
+        running.clear();
+        sort(keep.begin(), keep.end());
 
-
-
-
-
-
-
-
-
+        if (taskttpnt == -1){
+            tasktimetable = gettimetable(keep);
+            assert(tasktimetable.size());
+            taskttpnt = 0;
+        }
+        int bat = tasktimetable[taskttpnt++];
+        if (taskttpnt == tasktimetable.size()){
+                taskttpnt = 0;
+        }
+        vector<int> wtr;
+        for (int i = 0; i<K; i++){
+            if (bat & (1<<i)){
+                wtr.push_back(keep[i]);
+            }
+        }
+        assert(wtr.size() == P);
+        for (int i = 0; i<wtr.size(); i++){
+            runtask(wtr[i]);
+        }
+        sem_post(&arrmtx);
+    }
+}
 #endif

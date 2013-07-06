@@ -13,6 +13,9 @@ public:
     vector<Present> task;//all tasks
     int nexttaskid;
 
+    vector<int> tasktimetable;
+    int taskttpnt;
+
     double history_pressure;
     double history_sensitive;
 
@@ -34,10 +37,13 @@ public:
     void taskfinish(int k);
     void trypush();
     void tryrun();
-    static void* realrun(void *arg);
+    void runtask(int u);
+    static void* runthread(void *arg);
     static int getpid(string cmd);
     void pausetask(int id);
     void fgtask(int id);
-    vector<int> timetable(vector<int> list);
+    vector<int> gettimetable(vector<int> list);
+    static void* _timeinterrupt(void* args);
+    void timeinterrupt();
 };
 #endif

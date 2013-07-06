@@ -8,6 +8,8 @@ Present::Present(string _name, string _cmd, int _id){
     name = _name;
     cmd = _cmd;
     id = _id;
+
+    pid = -1;
 }
 
 void Present::init(string filename){
