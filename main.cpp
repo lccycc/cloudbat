@@ -2,7 +2,7 @@
 #include "present.h"
 #include "sched.h"
 //Sched(K, P);
-Sched sched(7,5);
+Sched sched(4,12);
 int main(){
     /*
     for (int i = 10; i>=1; i--){

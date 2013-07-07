@@ -217,8 +217,7 @@ vector<int> Sched::gettimetable(vector<int> list){
     int K = list.size();
     assert(K<31);
     assert(K>=P);
-    int GCD = gcd(K, P);
-    cerr<<"K = "<<K<<endl;
+    cerr<<"K = "<<K<<", P = "<<P<<endl;
     int psperK =  K/P;
     vector<pair<int, double> > lev0;
     vector<int> que;
@@ -264,54 +263,77 @@ vector<int> Sched::gettimetable(vector<int> list){
         }
     }
     int R = K%P;
-    int RD = R/GCD;
+    int RD = R/gcd(R, K);
     cerr<<"RD = "<<RD<<endl;
     LL maskK = (1<<K)-1;
     for (int i = que.size()-1; i>=0 && count1bit(que[i]) == K-R; i--){
         levF.push_back(make_pair(que[i]^maskK, fus[i]));
     }
     cerr<<"levF size = "<<levF.size()<<endl;
-    vector<LL> queRD;
-    map<LL, double> fusRD;
-    map<LL, int> lastRD;
+    vector<uLL> queRD;
+    map<uLL, pair<double, int> > fusRD;
     queRD.push_back(0);
-    fusRD[0] = 0;
+    fusRD[0] = make_pair(0, 0);
+
+    int cbit = 1;
+    while ((1<<cbit)<(RD+1)){
+        cbit++;
+    }
+    assert(cbit * K <=64);
+
     for (unsigned head = 0; head < queRD.size(); head++){
-        LL u = queRD[head];
-        double uy = fusRD[u];
+        uLL u = queRD[head];
+
+        /*
+        int extbit = 0;
+        uLL tmpu = u;
+        for (unsigned i = 0; i<K; i++){
+            if (tmpu%(RD+1) < RD){
+                extbit++;
+            }
+            tmpu /= (RD+1);
+        }
+        if (extbit < R){
+            continue;
+        }
+        */
+
+        double uy = fusRD[u].first;
         for (unsigned i = 0; i<levF.size(); i++){
             int x = levF[i].first;
             double y = levF[i].second;
-            LL v = tryadd(u, x, K, RD);
+            uLL v = tryadd(u, x, K, RD, cbit, true);
             if (v == 0){
                 continue;
             }
-            if (fusRD.find(v) == fusRD.end()){
-                fusRD[v] = y;
-                lastRD[v] = x;
+            map<uLL, pair<double, int> >::iterator ft;
+            if ((ft = fusRD.find(v)) == fusRD.end()){
+                fusRD[v] = make_pair(y, x);
                 queRD.push_back(v);
             }else{
-                double vy = fusRD[v];
+                double vy = ft->second.first;
                 if (vy > uy + y){
-                    fusRD[v] = uy + y;
-                    lastRD[v] = x;
+                    ft->second.first = uy + y;
+                    ft->second.second = x;
                 }
             }
         }
     }
     cerr<<"queRD size = "<<queRD.size()<<endl;
     //now find solution
-    LL finalx = 1;
+    uLL finalx = 0;
     for (int i = 0; i<K; i++){
-        finalx*=(RD+1);
+        //finalx*=(RD+1);
+        finalx = ((finalx<<cbit)|(RD));
     }
-    finalx--;
+    //finalx--;
     assert(finalx == queRD[queRD.size()-1]);
     vector<int> seq;
     vector<int> midseq;
     while (finalx != 0){
-        int x = lastRD[finalx];
-        finalx = tryadd(finalx, x, K, RD, -1);
+        int x = fusRD[finalx].second;
+        cout<<finalx<<' '<<x<<endl;
+        finalx = tryadd(finalx, x, K, RD, cbit, false);
 
         x ^= maskK;
         midseq.push_back(x);

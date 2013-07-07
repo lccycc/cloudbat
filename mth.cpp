@@ -21,19 +21,26 @@ void init(LL* mi, int base, int len){
 LL getpos(LL a, LL* mi, int pos){
     return a/mi[pos]%mi[1];
 }
-LL tryadd(LL a, LL d, int K, int D, int sgn){
-    LL res = 0;
-    LL ds = 1;
+uLL tryadd(uLL a, int d, int K, int D, int cbit, bool sgn){
+    uLL res = 0;
+    uLL mask = (1LL<<cbit)-1;
+    int bs = 0;
     for (int i = 0; i<K; i++){
-        int ba = a%(D+1);
-        bool bd = (d&(1<<i));
-        int nw = ba + bd * sgn;
-        if (nw > D){
-            return 0;
+        uLL ba = (a & mask);
+        bool bd = (d&(1LL<<i));
+        uLL nw;
+        if (sgn){
+            nw = ba + bd;
+            if (nw > D){
+                return 0;
+            }
+        }else{
+            assert(ba >= bd);
+            nw = ba - bd;
         }
-        res += nw * ds;
-        ds *= (D+1);
-        a /= (D+1);
+        res |= (nw<<bs);
+        bs += cbit;
+        a>>=cbit;
     }
     return res;
 }
