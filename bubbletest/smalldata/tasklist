@@ -1,0 +1,40 @@
+./bubbletest/eup 2
+./bubbletest/data/eup_2.dat
+./bubbletest/eup 3
+./bubbletest/data/eup_3.dat
+./bubbletest/eup 4
+./bubbletest/data/eup_4.dat
+./bubbletest/eup 1
+./bubbletest/data/eup_1.dat
+./bubbletest/eup 10
+./bubbletest/data/eup_10.dat
+./bubbletest/eup 5
+./bubbletest/data/eup_5.dat
+./bubbletest/eup 6
+./bubbletest/data/eup_6.dat
+./bubbletest/eup 7
+./bubbletest/data/eup_7.dat
+./bubbletest/eup 8
+./bubbletest/data/eup_8.dat
+./bubbletest/eup 9
+./bubbletest/data/eup_9.dat
+./bubbletest/estream 1
+./bubbletest/data/estream_1.dat
+./bubbletest/estream 2
+./bubbletest/data/estream_2.dat
+./bubbletest/estream 3
+./bubbletest/data/estream_3.dat
+./bubbletest/estream 4
+./bubbletest/data/estream_4.dat
+./bubbletest/estream 5
+./bubbletest/data/estream_5.dat
+./bubbletest/estream 6
+./bubbletest/data/estream_6.dat
+./bubbletest/estream 7
+./bubbletest/data/estream_7.dat
+./bubbletest/estream 8
+./bubbletest/data/estream_8.dat
+./bubbletest/estream 9
+./bubbletest/data/estream_9.dat
+./bubbletest/estream 10
+./bubbletest/data/estream_10.dat

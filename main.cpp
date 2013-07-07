@@ -2,7 +2,7 @@
 #include "present.h"
 #include "sched.h"
 //Sched(K, P);
-Sched sched(4,12);
+Sched sched(3,5);
 int main(){
     /*
     for (int i = 10; i>=1; i--){
@@ -13,11 +13,15 @@ int main(){
     }
     */
     sched.loadtasklist(string("bubbletest/data/tasklist"));
-    //sched.trypush();
-    for (int i = 0; i<sched.K+sched.P; i++){
-        sched.keep.push_back(i);
-    }
-    sched.gettimetable(sched.keep);
+    pthread_t ppush;
+    pthread_create(&ppush, NULL, sched._trypush, &sched);
+    sleep(4);
+
+    pthread_t pinter;
+    pthread_create(&pinter, NULL, sched._timeinterrupt, &sched);
+
+    pthread_join(ppush, NULL);
+    pthread_join(pinter, NULL);
 
     return 0;
 }

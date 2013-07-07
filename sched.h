@@ -35,6 +35,8 @@ public:
     double getworkload(vector<int> &ids);
     int addtask(string name, string cmd, string datafile);
     void taskfinish(int k);
+    static void* _trypush(void* args);
+    void trykeep();
     void trypush();
     void tryrun();
     void runtask(int u);

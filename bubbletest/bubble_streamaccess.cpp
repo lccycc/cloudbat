@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     }else{
         cerr<<"warning: default level = 5"<<endl;
     }
-    bw_stream_size = 1024*256*level;
+    bw_stream_size = 10*1024*256*level;
 
 	double *bw_data;
 	double *mid;

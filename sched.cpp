@@ -8,6 +8,9 @@ Sched::Sched(int _K, int _P){
     K = _K;
     P = _P;
     nexttaskid = 0;
+
+    taskttpnt = -1;
+
     history_pressure = 0;
     history_sensitive = 0;
 
@@ -29,9 +32,11 @@ void Sched::loadtasklist(string tasklist){
     ifstream fin(tasklist.c_str());
     string cmd;
     string datafile;
+    int cnt = 0;
     while (std::getline(fin, cmd)){
         std::getline(fin, datafile);
         addtask(cmd, cmd, datafile);
+        //if (++cnt >=4){ break;}
     }
     fin.close();
 }
@@ -85,25 +90,37 @@ void Sched::taskfinish(int k){
         }
     }
     cerr<<"           "<<k<<" finish, "<<gettime()<<endl;
+    taskttpnt = -1;
     sem_post(&arrmtx);
     sem_post(&pmtx);
+}
+void* Sched::_trypush(void* args){
+    Sched &s = *((Sched*)args);
+    s.trypush();
+    cerr<<"Thread: _trypush end"<<endl;
+    return NULL;
 }
 void Sched::trypush(){
     do{
         sem_wait(&pmtx);
         sem_wait(&arrmtx);
-        while (keep.size() < K && nexttaskid < task.size()){
-            int id = nexttaskid++;
-            keep.push_back(id);
-            cerr<<id<<" push into keep"<<endl;
-        }
+        trykeep();
         if (keep.size()){
             tryrun();
         }
+        trykeep();
         sem_post(&arrmtx);
     }while (keep.size() || nexttaskid < task.size());
     for (unsigned i = 0; i<task.size(); i++){
         pthread_join(task[i].thread, NULL);
+    }
+}
+void Sched::trykeep(){
+    while (keep.size() < K && nexttaskid < task.size()){
+        int id = nexttaskid++;
+        keep.push_back(id);
+        taskttpnt = -1;
+        cerr<<id<<" push into keep"<<endl;
     }
 }
 void Sched::tryrun(){
@@ -161,8 +178,8 @@ void Sched::runtask(int u){
         }
     }
     running.push_back(u);
-    cerr<<u<<" prepare to run, cmd = "<<task[u].cmd<<endl;
     if (task[u].pid == -1){
+        cerr<<u<<" prepare to run, cmd = "<<task[u].cmd<<endl;
         void* arg[2];
         arg[0] = this;
         arg[1] = &u;
@@ -207,9 +224,11 @@ int Sched::getpid(string cmd){
 }
 void Sched::pausetask(int id){
     kill(task[id].pid, 19);
+    //cerr<<"task pause, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 void Sched::fgtask(int id){
     kill(task[id].pid, 18);
+    //cerr<<"task fg, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 
 
@@ -235,6 +254,7 @@ vector<int> Sched::gettimetable(vector<int> list){
         }
         double mr = getworkload(ids);
         lev0.push_back(make_pair(i, mr));
+        cout<<mr<<endl;
     }
     vector<int> que;
     FUSTYPE fus;
@@ -335,7 +355,6 @@ vector<int> Sched::gettimetable(vector<int> list){
     vector<int> midseq;
     while (finalx != 0){
         int x = fusRD[finalx].second;
-        cout<<finalx<<' '<<x<<endl;
         finalx = tryadd(finalx, x, K, RD, cbit, false);
 
         x ^= maskK;
@@ -356,7 +375,7 @@ vector<int> Sched::gettimetable(vector<int> list){
     }
     cerr<<"---timetable size: "<<seq.size()<<endl;
     for (signed i = 0; i<seq.size(); i++){
-        for (int j = 0; j<K; j++){
+        for (int j = K-1; j>=0; j--){
             if (seq[i] & (1<<j)){
                 cerr<<'1';
             }else{
@@ -376,10 +395,16 @@ void* Sched::_timeinterrupt(void* args){
 void Sched::timeinterrupt(){
     while (1){
         sem_wait(&arrmtx);
+        cerr<<"interrupt!"<<endl;
         if (keep.size() == 0){
             sem_post(&arrmtx);
             break;
         }
+        if (keep.size() < K && nexttaskid < task.size()){
+            sem_post(&arrmtx);
+            continue;
+        }
+
         //cut all the running thread
         for (unsigned i = 0; i<running.size(); i++){
             pausetask(running[i]);
@@ -398,16 +423,23 @@ void Sched::timeinterrupt(){
                 taskttpnt = 0;
         }
         vector<int> wtr;
-        for (int i = 0; i<K; i++){
+        for (int i = 0; i<keep.size(); i++){
             if (bat & (1<<i)){
                 wtr.push_back(keep[i]);
             }
         }
+        cerr<<"bat = "<<bat<<" table next:";
+        for (int i = 0; i<wtr.size(); i++){
+            cerr<<' '<<wtr[i];
+        }
+        cerr<<endl;
         assert(wtr.size() == P);
         for (int i = 0; i<wtr.size(); i++){
             runtask(wtr[i]);
         }
         sem_post(&arrmtx);
+        sleep(1);
     }
+    cerr<<"thread: _timeinterrupt end"<<endl;
 }
 #endif
