@@ -214,16 +214,15 @@ void Sched::fgtask(int id){
 
 
 vector<int> Sched::gettimetable(vector<int> list){
+    typedef unordered_map<int, pair<double, int> > FUSTYPE;
+    typedef unordered_map<uLL, pair<double, int> > FUSRDTYPE;
+
     int K = list.size();
     assert(K<31);
     assert(K>=P);
     cerr<<"K = "<<K<<", P = "<<P<<endl;
     int psperK =  K/P;
     vector<pair<int, double> > lev0;
-    vector<int> que;
-    map<int, double> fus;
-    map<int, int> last;
-    vector<pair<int, double> > levF;
     for (int i = 0; i<(1<<K); i++){
         if (count1bit(i) != P){
             continue;
@@ -237,11 +236,13 @@ vector<int> Sched::gettimetable(vector<int> list){
         double mr = getworkload(ids);
         lev0.push_back(make_pair(i, mr));
     }
+    vector<int> que;
+    FUSTYPE fus;
     que.push_back(0);
-    fus[0] = 0;
+    fus[0] = make_pair(0, 0);
     for (unsigned head = 0; head < que.size(); head++){
         int u = que[head];
-        int uy = fus[u];
+        double uy = fus[u].first;
         for (unsigned i = 0; i<lev0.size(); i++){
             int x = lev0[i].first;
             if (x & u){
@@ -249,15 +250,15 @@ vector<int> Sched::gettimetable(vector<int> list){
             }
             double y = lev0[i].second;
             int v = (x | u);
-            if (fus.find(v) == fus.end()){
-                fus[v] = uy + y;
-                last[v] = x;
+            FUSTYPE::iterator ft;
+            if ((ft = fus.find(v)) == fus.end()){
+                fus[v] = make_pair(uy + y, x);
                 que.push_back(v);
             }else{
-                double vy = fus[v];
+                double vy = ft->second.first;
                 if (vy > uy + y){
-                    fus[v] = uy + y;
-                    last[v] = x;
+                    ft->second.first = uy + y;
+                    ft->second.second = x;
                 }
             }
         }
@@ -266,12 +267,14 @@ vector<int> Sched::gettimetable(vector<int> list){
     int RD = R/gcd(R, K);
     cerr<<"RD = "<<RD<<endl;
     LL maskK = (1<<K)-1;
+    vector<pair<int, double> > levF;
     for (int i = que.size()-1; i>=0 && count1bit(que[i]) == K-R; i--){
-        levF.push_back(make_pair(que[i]^maskK, fus[i]));
+        levF.push_back(make_pair(que[i]^maskK, fus[i].first));
     }
     cerr<<"levF size = "<<levF.size()<<endl;
+
     vector<uLL> queRD;
-    map<uLL, pair<double, int> > fusRD;
+    FUSRDTYPE fusRD;
     queRD.push_back(0);
     fusRD[0] = make_pair(0, 0);
 
@@ -306,7 +309,7 @@ vector<int> Sched::gettimetable(vector<int> list){
             if (v == 0){
                 continue;
             }
-            map<uLL, pair<double, int> >::iterator ft;
+            FUSRDTYPE::iterator ft;
             if ((ft = fusRD.find(v)) == fusRD.end()){
                 fusRD[v] = make_pair(y, x);
                 queRD.push_back(v);
@@ -344,7 +347,7 @@ vector<int> Sched::gettimetable(vector<int> list){
     for (unsigned i = 0; i<midseq.size(); i++){
         int x = midseq[i];
         while (x != 0){
-            int dx = last[x];
+            int dx = fus[x].second;
             assert(dx);
             assert((x & dx) == dx);
             seq.push_back(dx);

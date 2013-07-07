@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <map>
 #include <vector>
+#include <tr1/unordered_map>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -21,6 +22,8 @@
 #include <mutex>
 
 using namespace std;
+using namespace tr1;
+
 typedef unsigned int uint;
 typedef long long LL;
 typedef unsigned long long uLL;
