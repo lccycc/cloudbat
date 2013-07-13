@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     }else{
         cerr<<"warning: default level = 5"<<endl;
     }
-    bw_stream_size = 10*1024*256*level;
+    bw_stream_size = 1024*256*level/2;
 
 	double *bw_data;
 	double *mid;
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 	mid=bw_data+bw_stream_size/2;
 
 	//printf("smash space is 1280 * 8 KB\n");
-    long long round = 5000000 * 100 / bw_stream_size ;
+    long long round = 15000000L * 100 / bw_stream_size ;
 
     round *= 2;
 

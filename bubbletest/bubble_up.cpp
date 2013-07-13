@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         cerr<<"warning: default level = 5"<<endl;
     }
 
-    footprint_size = 10*1024*256*level;
+    footprint_size = 1024*256*level;
 	//footprint_size=256*6144;//1M-->4M keep smashing 4MB data
 	//printf("smash 4*256*6144B space\n");
 
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     assert(data_chunk);
 
 
-    for (int i = 0; i<5000000; i++){
+    for (int i = 0; i<15000000; i++){
 		dump[0]+=data_chunk[r]++;
 		dump[1]+=data_chunk[r]++;
 		dump[2]+=data_chunk[r]++;

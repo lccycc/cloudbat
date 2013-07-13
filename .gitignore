@@ -4,3 +4,4 @@ o3
 emain
 note
 *.sw*
+obj/
