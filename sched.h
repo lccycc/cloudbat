@@ -29,11 +29,17 @@ public:
     double getsystime();
     double gettime();
 
-    void loadtasklist(string tasklist);
-    double try_getpressure(int u);
-    double try_getmissrate(int u);
-    double getworkload(vector<int> &ids);
     int addtask(string name, string cmd, string datafile);
+    void loadtasklist(string tasklist);
+    void loadbenchmark();
+
+//----footprint----
+    double try_getfilltime(int u);
+    double try_gettotalmiss(int u);
+    double getfilltime(vector<int> &ids);
+    double gettotalmiss(vector<int> &ids);
+//-----------------
+
     void taskfinish(int k);
     static void* _trypush(void* args);
     void trykeep();

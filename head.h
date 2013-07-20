@@ -21,7 +21,10 @@
 #include <thread>
 #include <mutex>
 
+#include "histo.H"
+
 using namespace std;
+using namespace histo;
 using namespace tr1;
 
 typedef unsigned int uint;

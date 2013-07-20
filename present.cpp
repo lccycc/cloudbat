@@ -14,13 +14,15 @@ Present::Present(string _name, string _cmd, int _id){
 
 void Present::init(string filename){
     FILE *f = fopen(filename.c_str(), "r");
-    fscanf(f, "N:%llu M:%llu total_time:%lf", &N, &M, &total_time);
+    fscanf(f, "N:%llu M:%llu total_time:%*lf", &N, &M);
     int i, ws;
-    double fp, missrate;
+    double fp, missrate, td;
     memset(mr, 0 , sizeof(mr));
-    memset(ft, 0 , sizeof(ft));
+    //memset(ft, 0 , sizeof(ft));
     cnt = 1;
-    while (fscanf(f, "%d%d%lf%*lf%lf", &i, &ws, &fp, &missrate)!=EOF){
+    while (fscanf(f, "%d%d%lf%lf%lf", &i, &ws, &fp, &td, &missrate)!=EOF){
+        ft2c_c[i] = fp;
+        /*
         while (cnt<MaxCache && fp >= cnt){
             mr[cnt] = missrate;
             ft[cnt] = ws;
@@ -28,28 +30,21 @@ void Present::init(string filename){
             //ft[cnt] = ws * total_time/N;
             cnt++;
         }
+        */
     }
+    cnt = i + 1;
     fclose(f);
 }
-double Present::sensitive(double filltime){
-    /*
-     * search c when ft[c] = filltime.
-     * return mr[c]
-     */
-    int l = 1, r = cnt;
-    while (l+1<r){
-        int md = (l+r)>>1;
-        if (ft[md] <=filltime){
-            l = md;
-        }else{
-            r = md;
-        }
-    }
-    return mr[l];
+double Present::missnum(double filltime){
+    filltime = filltime * N /(total_time*1000000);
+    int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
+    idx = min(idx, cnt-1);
+    return ft2c_c[idx];
 }
-double Present::pressure(int cachesize){
-    assert(0 < cachesize && cachesize < MaxCache);
-    assert(ft[cachesize]>0);
-    return ft[cachesize];
+double Present::fillcache(double filltime){
+    filltime = filltime * N /(total_time*1000000);
+    int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
+    idx = min(idx, cnt-1);
+    return mr[idx]*N;
 }
 #endif

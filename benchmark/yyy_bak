@@ -1,0 +1,45 @@
+perlbench
+/home/lcc/spec2006/benchspec/CPU2006/400.perlbench/run/run_base_ref_domU.0025/
+./perlbench_base.domU -I./lib checkspam.pl 2500 5 25 11 150 1 1 1 1
+bzip2
+/home/lcc/spec2006/benchspec/CPU2006/401.bzip2/run/run_base_ref_domU.0000/
+./bzip2_base.domU input.source 280
+gcc
+/home/lcc/spec2006/benchspec/CPU2006/403.gcc/run/run_base_ref_domU.0000/
+./gcc_base.domU 166.i -o 166.s
+bwaves
+/home/lcc/spec2006/benchspec/CPU2006/410.bwaves/run/run_base_ref_domU.0017/
+./bwaves_base.domU
+gamess
+/home/lcc/spec2006/benchspec/CPU2006/416.gamess/run/run_base_ref_domU.0017/
+./gamess_base.domU
+mcf
+/home/lcc/spec2006/benchspec/CPU2006/429.mcf/run/run_base_ref_domU.0000/
+./mcf_base.domU inp.in
+milc
+/home/lcc/spec2006/benchspec/CPU2006/433.milc/run/run_base_ref_domU.0017/
+./milc_base.domU
+zeusmp
+/home/lcc/spec2006/benchspec/CPU2006/434.zeusmp/run/run_base_ref_domU.0017/
+./zeusmp_base.domU
+leslie3d
+/home/lcc/spec2006/benchspec/CPU2006/437.leslie3d/run/run_base_ref_domU.0016/
+./leslie3d_base.domU
+namd
+/home/lcc/spec2006/benchspec/CPU2006/444.namd/run/run_base_ref_domU.0000/
+./namd_base.domU --input namd.input --iterations 38 --output namd.out 
+gobmk
+/home/lcc/spec2006/benchspec/CPU2006/445.gobmk/run/run_base_ref_domU.0000/
+./gobmk_base.domU --quiet --mode gtp
+dealII
+/home/lcc/spec2006/benchspec/CPU2006/447.dealII/run/run_base_ref_domU.0017/
+./dealII_base.domU 23
+soplex
+/home/lcc/spec2006/benchspec/CPU2006/450.soplex/run/run_base_ref_domU.0017/
+./soplex_base.domU -s1 -e -m45000 pds-50.mps
+povray
+/home/lcc/spec2006/benchspec/CPU2006/453.povray/run/run_base_ref_domU.0017/
+./povray_base.domU SPEC-benchmark-ref.ini
+calculix
+/home/lcc/spec2006/benchspec/CPU2006/454.calculix/run/run_base_ref_domU.0017/
+./calculix_base.domU -i  hyperviscoplastic

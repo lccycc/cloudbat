@@ -40,37 +40,64 @@ void Sched::loadtasklist(string tasklist){
     }
     fin.close();
 }
-double Sched::try_getpressure(int u){
-    double ft = 0;
-    for (unsigned i = 0; i<running.size(); i++){
-        ft += 1/task[running[i]].pressure(cachesize);
+void Sched::loadbenchmark(){
+    string name, dir, cmd;
+
+    map<string,double> tc;
+    ifstream tin("./benchmark/timecost");
+    double timecost;
+    while (tin>>name>>timecost){
+        tc[name] = timecost;
     }
-    ft += 1/task[u].pressure(cachesize);
-    assert(ft>0);
-    ft = 1/ft;
-    return ft;
+
+    ifstream fin("./benchmark/xxx");
+    while (std::getline(fin, name)){
+        std::getline(fin, dir);
+        std::getline(fin, cmd);
+        int id = task.size();
+        Present p(name, cmd, id);
+        p.init("./benchmark/"+name+".dat");
+        p.total_time = tc[name];
+        task.push_back(p);
+    }
 }
-double Sched::try_getmissrate(int u){
-    double ft = try_getpressure(u);
-    double mr = 0;
-    for (unsigned i = 0; i<running.size(); i++){
-        mr += task[running[i]].sensitive(ft);
-    }
-    mr += task[u].sensitive(ft);
-    return mr;
+
+double Sched::try_getfilltime(int u){
+    vector<int> t = running;
+    t.push_back(u);
+    return getfilltime(t);
 }
-double Sched::getworkload(vector<int> &ids){
-    double ft = 0;
-    for (unsigned i = 0; i<ids.size(); i++){
-        ft += 1/task[ids[i]].pressure(cachesize);
+double Sched::try_gettotalmiss(int u){
+    vector<int> t = running;
+    t.push_back(u);
+    return gettotalmiss(t);
+}
+double Sched::getfilltime(vector<int> &ids){
+    const double MaxTime = 25000.0 * 1000000.0;
+    double l = 0, r = MaxTime;
+    while (l+100<r){
+        double md = (l+r)/2;
+        double ttc = 0;
+        for (unsigned i = 0; i<ids.size(); i++){
+            ttc +=task[ids[i]].fillcache(md);
+        }
+        if (ttc < cachesize){
+            l = md;
+        }else{
+            r = md;
+        }
     }
+    return l;
+}
+
+double Sched::gettotalmiss(vector<int> &ids){
+    double ft = getfilltime(ids);
     assert(ft>0);
-    ft = 1/ft;
-    double mr = 0;
+    double mn = 0;
     for (unsigned i = 0; i<ids.size(); i++){
-        mr += task[ids[i]].sensitive(ft);
+        mn += task[ids[i]].missnum(ft);
     }
-    return mr;
+    return mn;
 }
 
 int Sched::addtask(string name, string cmd, string datafile){
@@ -128,12 +155,13 @@ void Sched::tryrun(){
         return;
     }
     vector<int> get;
+    /*
     double runningpres = 0;
     for (unsigned i = 0; i<running.size(); i++){
-        runningpres += task[running[i]].pressure(cachesize);
+        runningpres += task[running[i]].filltime(cachesize);
     }
     for (unsigned i = 0; i<keep.size(); i++){
-        if ((task[keep[i]].pressure(cachesize)+runningpres)
+        if ((task[keep[i]].filltime(cachesize)+runningpres)
                 /(running.size()+1)  > history_pressure){
             get.push_back(keep[i]);
         }
@@ -146,22 +174,25 @@ void Sched::tryrun(){
             }
         }
     }
+    */
     if (get.empty()){
         get = keep;
     }
     double minmiss = 999999999;
     int fd = -1;
     for (unsigned i = 0; i< get.size(); i++){
-        double mr = try_getmissrate(get[i]);
+        double mr = try_gettotalmiss(get[i]);
         if (fd == -1 || minmiss > mr){
             fd = get[i];
             minmiss = mr;
         }
     }
+    /*
     double pres = task[fd].pressure(cachesize);
     double sens = task[fd].sensitive(try_getpressure(fd));
     history_pressure = (history_pressure * (P+P-1)+pres)/(P+P);
     history_sensitive = (history_sensitive * (P+P-1)+sens)/(P+P);
+    */
     //for debug
     /*
     get = keep;
@@ -252,7 +283,7 @@ vector<int> Sched::gettimetable(vector<int> list){
                 ids.push_back(list[j]);
             }
         }
-        double mr = getworkload(ids);
+        double mr = gettotalmiss(ids);
         lev0.push_back(make_pair(i, mr));
         cout<<mr<<endl;
     }
