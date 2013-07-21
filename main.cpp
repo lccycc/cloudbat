@@ -2,7 +2,7 @@
 #include "present.h"
 #include "sched.h"
 //Sched(K, P);
-Sched sched(3,5);
+Sched sched(4,2);
 int main(){
     /*
     for (int i = 10; i>=1; i--){
@@ -12,7 +12,8 @@ int main(){
         sched.addtask(name, "sh "+name, "");
     }
     */
-    sched.loadtasklist(string("bubbletest/data/tasklist"));
+    //sched.loadtasklist(string("bubbletest/data/tasklist"));
+    sched.loadbenchmark();
     pthread_t ppush;
     pthread_create(&ppush, NULL, sched._trypush, &sched);
     sleep(4);

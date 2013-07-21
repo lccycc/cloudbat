@@ -7,6 +7,7 @@ Present::Present(){
 Present::Present(string _name, string _cmd, int _id){
     name = _name;
     cmd = _cmd;
+    dir = "./";
     id = _id;
 
     pid = -1;
@@ -22,6 +23,7 @@ void Present::init(string filename){
     cnt = 1;
     while (fscanf(f, "%d%d%lf%lf%lf", &i, &ws, &fp, &td, &missrate)!=EOF){
         ft2c_c[i] = fp;
+        mr[i] = missrate;
         /*
         while (cnt<MaxCache && fp >= cnt){
             mr[cnt] = missrate;
@@ -36,15 +38,15 @@ void Present::init(string filename){
     fclose(f);
 }
 double Present::missnum(double filltime){
-    filltime = filltime * N /(total_time*1000000);
+    filltime = filltime * N /(total_time*1000000000);
+    int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
+    idx = min(idx, cnt-1);
+    return mr[idx]*N/filltime;
+}
+double Present::fillcache(double filltime){
+    filltime = filltime * N /(total_time*1000000000);
     int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
     idx = min(idx, cnt-1);
     return ft2c_c[idx];
-}
-double Present::fillcache(double filltime){
-    filltime = filltime * N /(total_time*1000000);
-    int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
-    idx = min(idx, cnt-1);
-    return mr[idx]*N;
 }
 #endif

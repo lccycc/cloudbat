@@ -5,3 +5,4 @@ emain
 note
 *.sw*
 obj/
+log/
