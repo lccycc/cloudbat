@@ -44,4 +44,9 @@ uLL tryadd(uLL a, int d, int K, int D, int cbit, bool sgn){
     }
     return res;
 }
+double getsystime(){
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec / 1000000.0;
+}
 #endif

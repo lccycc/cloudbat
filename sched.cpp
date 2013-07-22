@@ -21,11 +21,6 @@ Sched::Sched(int _K, int _P){
     sem_init(&arrmtx, 0, 1);
     sem_init(&wfttr, 0, 0);
 }
-double Sched::getsystime(){
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return t.tv_sec + t.tv_usec/1000000.0;
-}
 double Sched::gettime(){
     return getsystime()-systartime;
 }
@@ -78,17 +73,12 @@ void Sched::loadbenchmark(){
     }
 }
 
-double Sched::try_getfilltime(int u){
+double Sched::try_getworkload(int u){
     vector<int> t = running;
     t.push_back(u);
-    return getfilltime(t);
+    return getworkload(t);
 }
-double Sched::try_gettotalmiss(int u){
-    vector<int> t = running;
-    t.push_back(u);
-    return gettotalmiss(t);
-}
-double Sched::getfilltime(vector<int> &ids){
+double Sched::getfpfilltime(vector<int> &ids){
     const double MaxTime = 200.0 * 1000000000.0;
     double l = 1, r = MaxTime;
     double ttc = 0;
@@ -106,9 +96,8 @@ double Sched::getfilltime(vector<int> &ids){
     }
     return l;
 }
-
-double Sched::gettotalmiss(vector<int> &ids){
-    double ft = getfilltime(ids);
+double Sched::getfpworkload(vector<int> &ids){
+    double ft = getfpfilltime(ids);
     assert(ft>0);
     double mn = 0;
     for (unsigned i = 0; i<ids.size(); i++){
@@ -116,7 +105,29 @@ double Sched::gettotalmiss(vector<int> &ids){
     }
     return mn;
 }
-
+int Sched::getbbpressure(vector<int> &ids){
+    vector<int> bblevel;
+    for (unsigned i = 0; i<ids.size(); i++){
+        bblevel.push_back(task[ids[i]].plevel);
+    }
+    return bubble.lookup(bblevel);
+}
+double Sched::getbbworkload(vector<int> &ids){
+    int plevel = getbbpressure(ids);
+    double tot = 0;
+    for (unsigned i = 0; i<ids.size(); i++){
+        tot += task[ids[i]].delay[plevel];
+    }
+    return tot;
+}
+double Sched::getworkload(vector<int> &ids){
+    if (method == FOOTPRINTMETHOD){
+        return getfpworkload(ids);
+    }else
+    if (method == BUBBLEMETHOD){
+        return getbbworkload(ids);
+    }
+}
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
@@ -198,7 +209,7 @@ void Sched::tryrun(){
     double minmiss = 999999999;
     int fd = -1;
     for (unsigned i = 0; i< get.size(); i++){
-        double mr = try_gettotalmiss(get[i]);
+        double mr = try_getworkload(get[i]);
         if (fd == -1 || minmiss < mr){
             fd = get[i];
             minmiss = mr;
@@ -311,7 +322,7 @@ vector<int> Sched::gettimetable(vector<int> list){
                 ids.push_back(list[j]);
             }
         }
-        double mr = gettotalmiss(ids);
+        double mr = getworkload(ids);
         lev0.push_back(make_pair(i, mr));
         for (int j = 0; j<K; j++){
             /*

@@ -5,6 +5,9 @@
 #define SCHED_H
 class Sched{
 public:
+#define FOOTPRINTMETHOD 1
+#define BUBBLEMETHOD 2
+    int method;
     int K;//the tasks that we could see
     int P;//the prosessors that we could  run
     int cachesize;
@@ -26,7 +29,6 @@ public:
     sem_t wfttr;
 
     Sched(int _K, int _P);
-    double getsystime();
     double gettime();
 
     int addtask(string name, string cmd, string datafile);
@@ -34,11 +36,15 @@ public:
     void loadbenchmark();
 
 //----footprint----
-    double try_getfilltime(int u);
-    double try_gettotalmiss(int u);
-    double getfilltime(vector<int> &ids);
-    double gettotalmiss(vector<int> &ids);
+    double getfpfilltime(vector<int> &ids);
+    double getfpworkload(vector<int> &ids);
+//----bubble------
+    Bubble bubble;
+    double getbbpressure(vector<int> &ids);
+    double getbbworkload(vector<int> &ids);
 //-----------------
+    double try_getworkload(int u);
+    double getworkload(vector<int> &ids);
 
     void taskfinish(int k);
     static void* _trypush(void* args);
