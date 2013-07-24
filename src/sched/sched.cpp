@@ -43,7 +43,7 @@ void Sched::loadbenchmark(){
     map<string, string> di;
     map<string, string> cm;
 
-    ifstream tin("./benchmark/timecost");
+    ifstream tin("./benchmark/footprint/timecost");
     double timecost;
     while (tin>>name>>timecost){
         tc[name] = timecost;
@@ -60,7 +60,7 @@ void Sched::loadbenchmark(){
     }
     fin.close();
 
-    ifstream oin("./benchmark/order");
+    ifstream oin("./benchmark/footprint/order");
     while (std::getline(oin, name)){
         dir = di[name];
         cmd = cm[name];
@@ -105,7 +105,7 @@ double Sched::getfpworkload(vector<int> &ids){
     }
     return mn;
 }
-int Sched::getbbpressure(vector<int> &ids){
+double Sched::getbbpressure(vector<int> &ids){
     vector<int> bblevel;
     for (unsigned i = 0; i<ids.size(); i++){
         bblevel.push_back(task[ids[i]].plevel);
@@ -272,32 +272,12 @@ void* Sched::runthread(void *arg){
     system(s.task[id].cmd.c_str());
     s.taskfinish(id);
 }
-int Sched::getpid(string cmd){
-    //cmd = " " + cmd + "\n";
-    FILE *fp = popen("ps -ao pid,command", "r");
-    assert(fp);
-    int pid;
-    char pscmd[500];
-    bool findit = false;
-    while (fscanf(fp, "%d", &pid)!=EOF){
-        fgets(pscmd, 488, fp);
-        if (strstr(pscmd, cmd.c_str())!=NULL){
-            findit = true;
-            break;
-        }
-    }
-    fclose(fp);
-    if (!findit){
-        return -1;
-    }
-    return pid;
-}
 void Sched::pausetask(int id){
-    kill(task[id].pid, 19);
+    pausepid(task[id].pid);
     //ferr<<"task pause, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 void Sched::fgtask(int id){
-    kill(task[id].pid, 18);
+    fgpid(task[id].pid);
     //ferr<<"task fg, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 

@@ -1,10 +1,43 @@
-All:sched bubblebuild
+#!/usr/bin/env vim
 
-sched: present.h sched.h mth.h present.cpp sched.cpp mth.cpp main.cpp
-	g++ -std=c++11 -lpthread mth.cpp present.cpp sched.cpp main.cpp -o ./obj/emain
-bubblebuild:
-	g++ -std=c++11 -lpthread bubblebuild.cpp -o ./obj/ebubblebuild
-runsched:sched
-	time ./obj/emain 1>./log/sched.out 2>./log/sched.err
-runbubblebuild:bubblebuild
-	./obj/ebubblebuild 1>log/bubblebuildresult 2>xxx
+CC	:= g++
+V	:= @
+RM	+= -r
+LIB += -Llib -lpthread
+OBJ := ./obj/
+SRC := ./src/
+USER_FLAGS+= -O4 -I$(SRC) -std=c++11
+
+targets := $(wildcard $(SRC)main/*.cpp) $(wildcard $(SRC)main/*.c)
+objects := $(wildcard $(SRC)*/*.cpp) $(wildcard $(SRC)*/*.c)
+objects := $(filter-out $(targets), $(objects))
+objects := $(patsubst %.cpp,%.o,$(objects))
+dirctry := $(sort $(dir $(objects)))
+dirctry := $(patsubst %/,%,$(dirctry))
+objects := $(notdir $(objects))
+objects := $(addprefix $(OBJ),$(objects))
+targets := $(basename $(notdir $(targets)))
+targets := $(addprefix $(OBJ),$(targets))
+
+define make-target
+$(OBJ)$1: $(SRC)main/$1.cpp $(objects)
+	@echo + cc $$<
+	$(V)$(CC) $(USER_FLAGS) -o $$@ $$^ $(LIB)
+endef
+
+define make-intermediate 
+$(OBJ)%.o: $1/%.cpp
+	@echo + cc $$<
+	$(V)$(CC) -c $(USER_FLAGS) -o $$@ $$^ 
+endef
+
+all:always $(targets)
+
+$(foreach btar,$(targets),$(eval $(call make-target,$(notdir $(btar)))))
+$(foreach bdir,$(dirctry),$(eval $(call make-intermediate,$(bdir))))
+
+.PHONY:clean always reset test
+always:
+	$(V)mkdir -p $(OBJ)
+clean:
+	$(V)$(RM) $(OBJ)

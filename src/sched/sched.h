@@ -1,6 +1,7 @@
-#include "head.h"
-#include "present.h"
-#include "mth.h"
+#include "include/head.h"
+#include "include/mth.h"
+#include "present/present.h"
+#include "bubble/bubble.h"
 #ifndef SCHED_H
 #define SCHED_H
 class Sched{
@@ -53,7 +54,6 @@ public:
     void tryrun();
     void runtask(int u);
     static void* runthread(void *arg);
-    static int getpid(string cmd);
     void pausetask(int id);
     void fgtask(int id);
     vector<int> gettimetable(vector<int> list);

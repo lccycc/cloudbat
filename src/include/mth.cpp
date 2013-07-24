@@ -49,4 +49,48 @@ double getsystime(){
     gettimeofday(&t, NULL);
     return t.tv_sec + t.tv_usec / 1000000.0;
 }
+int getpid(string cmd){
+    //cmd = " " + cmd + "\n";
+    FILE *fp = popen("ps -ao pid,command", "r");
+    assert(fp);
+    int pid;
+    char pscmd[500];
+    bool findit = false;
+    while (fscanf(fp, "%d", &pid)!=EOF){
+        fgets(pscmd, 488, fp);
+        if (strstr(pscmd, cmd.c_str())!=NULL){
+            findit = true;
+            break;
+        }
+    }
+    fclose(fp);
+    if (!findit){
+        return -1;
+    }
+    return pid;
+}
+void pausepid(int pid){
+    kill(pid, 19);
+}
+void killpid(int pid){
+    kill(pid, 9);
+}
+void fgpid(int pid){
+    kill(pid, 18);
+}
+int runandgetpid(string cmd, int core){
+    char s[100];
+    cmd = cmd + " | ~/cloudbat/script/runandgetpid.sh";
+    if (core != -1){
+        sprintf(s, "taskset -c %d ", core);
+        cmd = s + cmd;
+    }
+    cmd = "echo "+cmd;
+    FILE *f = popen(cmd.c_str(), "r");
+    int pid = -1;
+    fscanf(f, "%d", &pid);
+    assert(pid != 32767 && pid != -1);
+    fclose(f);
+    return pid;
+}
 #endif

@@ -1,6 +1,8 @@
-#include "head.h"
-#include "present.h"
-#include "sched.h"
+#ifndef MAIN_CPP
+#define MAIN_CPP
+#include "include/head.h"
+#include "present/present.h"
+#include "sched/sched.h"
 //Sched(K, P);
 Sched sched(4,2);
 int main(){
@@ -26,3 +28,4 @@ int main(){
 
     return 0;
 }
+#endif

@@ -1,8 +1,9 @@
-#include "head.h"
 #ifndef PRESENT_H
 #define PRESENT_H
-const  uint32_t              SUBLOG_BITS = 8;
-const  uint32_t              MAX_WINDOW = (65-SUBLOG_BITS)*(1<<SUBLOG_BITS);
+#include "include/head.h"
+#include "bubble/bubble.h"
+const uint32_t SUBLOG_BITS = 8;
+const uint32_t MAX_WINDOW = (65-SUBLOG_BITS)*(1<<SUBLOG_BITS);
 const int WindowSub = 10000;
 const int MaxCache = 131100;
 class Present{
@@ -27,7 +28,7 @@ public:
     double missnum(double filltime);
     double fillcache(double filltime);
 //----bubble------
-    int plevel;
+    double plevel;
     double delay[MAX_BUBBLE_LEVEL];
 };
 #endif

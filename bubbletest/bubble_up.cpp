@@ -20,10 +20,14 @@ int main(int argc, char** argv)
 	lfsr=11;
 
     int level = 5;
+    bool infinite;
     if (argc >=2){
         sscanf(argv[1], "%d", &level);
     }else{
         cerr<<"warning: default level = 5"<<endl;
+    }
+    if (argc >=3){
+        infinite = true;
     }
 
     footprint_size = 1024*256*level;
@@ -37,7 +41,7 @@ int main(int argc, char** argv)
     assert(data_chunk);
 
 
-    for (int i = 0; i<15000000; i++){
+    for (int i = 0; i<15000000 || infinite; i++){
 		dump[0]+=data_chunk[r]++;
 		dump[1]+=data_chunk[r]++;
 		dump[2]+=data_chunk[r]++;
