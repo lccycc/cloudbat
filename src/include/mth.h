@@ -11,5 +11,5 @@ int getpid(string cmd);
 void pausepid(int pid);
 void killpid(int pid);
 void fgpid(int pid);
-int runandgetpid(string cmd, int core);
+int runandgetpid(string dir, string cmd, int core);
 #endif

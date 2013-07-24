@@ -78,19 +78,22 @@ void killpid(int pid){
 void fgpid(int pid){
     kill(pid, 18);
 }
-int runandgetpid(string cmd, int core){
-    char s[100];
-    cmd = cmd + " | ~/cloudbat/script/runandgetpid.sh";
+int runandgetpid(string dir, string cmd, int core){
+    cmd = cmd + "\" | ~/cloudbat/script/runandgetpid.sh";
     if (core != -1){
+        char s[100];
         sprintf(s, "taskset -c %d ", core);
         cmd = s + cmd;
     }
-    cmd = "echo "+cmd;
+    cmd = dir + " \n " + cmd;
+    cmd = "echo \""+cmd;
+    cout<<cmd<<endl;
     FILE *f = popen(cmd.c_str(), "r");
     int pid = -1;
     fscanf(f, "%d", &pid);
     assert(pid != 32767 && pid != -1);
     fclose(f);
+    cout<<"pid = "<<pid<<endl;
     return pid;
 }
 #endif

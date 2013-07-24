@@ -32,6 +32,8 @@ $(OBJ)%.o: $1/%.cpp
 endef
 
 all:always $(targets)
+runbubblebuild:
+	$(V) $(OBJ)/bubblebuild
 
 $(foreach btar,$(targets),$(eval $(call make-target,$(notdir $(btar)))))
 $(foreach bdir,$(dirctry),$(eval $(call make-intermediate,$(bdir))))

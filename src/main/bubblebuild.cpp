@@ -8,7 +8,7 @@ bool threadstop = false;
 void* runpressure(void* args){
     int level = *((int*)args);
     char cmd[100];
-    sprintf(cmd, "./bubbletest/estream %d", level);
+    sprintf(cmd, "./bubbletest/eup %d", level);
     cerr<<cmd<<endl;
     while (!threadstop){
         system(cmd);
@@ -24,37 +24,63 @@ public:
 };
 vector<NDC> benchmarklist;
 
-vector<string> bbpressurecmd;
+map<int, string> bbpressurecmd;
 double getpmu(){
+    const int maxsave = 10;
+    double r;
+
     sleep(1);
     ifstream resetin("/proc/helloworld");
+    resetin>>r;
     resetin.close();
-    sleep(12);
+    sleep(2+maxsave);
     ifstream fin("/proc/helloworld");
 
+
     double tot = 0;
-    for (int i = 0; i<20; i++){
-        double r;
+    for (int i = 1; i<=maxsave; i++){
         fin>>r;
         tot += r;
+        cout<<r<<' ';
     }
+    cout<<endl;
     fin.close();
-    tot/=20;
+    tot/=maxsave;
     return tot;
+}
+
+void runoncore(string cmd, int core){
+    char s[100];
+    sprintf(s, "taskset -c %d ", core);
+    cmd = s + cmd + " 1>~/xxx 2>~/xxx &";
+    system(cmd.c_str());
 }
 
 double getdisturb(NDC ndc, vector<int> level){
     vector<int> pid;
     chdir(ndc.dir.c_str());
-    int cmdpid = runandgetpid(ndc.cmd, 0);
+    runoncore(ndc.cmd, 0);
+    //int cmdpid = runandgetpid(ndc.dir, ndc.cmd, 0);
+    int fd = ndc.cmd.find(" ");
+    if (fd == -1) fd = ndc.cmd.length();
+    string cmdcut = ndc.cmd.substr(0, fd);
+    int cmdpid = getpid(cmdcut);
+    cout<<"cmdpid = "<<cmdpid<<endl;
     for (unsigned i = 0; i<level.size(); i++){
-        pid.push_back(runandgetpid(bbpressurecmd[level[i]], i+1));
+       // pid.push_back(runandgetpid("", bbpressurecmd[level[i]], i+1));
+       runoncore(bbpressurecmd[level[i]], i+1);
+       int bbpid = getpid(bbpressurecmd[level[i]]);
+       cout<<"bbpid = "<<bbpid<<endl;
+       pid.push_back(bbpid);
     }
     double pmu = getpmu();
     killpid(cmdpid);
+    system("killall eup -9");
+    /*
     for (unsigned i = 0; i<pid.size(); i++){
         killpid(pid[i]);
     }
+    */
     return pmu;
 }
 void getsensitive(NDC ndc, ofstream &fout){
@@ -66,7 +92,8 @@ void getsensitive(NDC ndc, ofstream &fout){
                 lev.push_back(i);
             }
             double ds = getdisturb(ndc, lev);
-            fout<<ndc.name<<' '<<P<<' '<<i<<' '<<ds/freerun<<endl;
+            double res = (freerun-ds)/freerun;
+            fout<<ndc.name<<' '<<P<<' '<<i<<' '<<res<<endl;
         }
     }
 }
@@ -90,12 +117,12 @@ void getbenchmarksensitive(){
 int main(){
 
     for (int i = 1; i<=10; i++){
-        string pref = "~/cloudbat/bubbletest/estreamaccess ";
+        string pref = "~/cloudbat/bubbletest/eup ";
         char c[5];
-        sprintf(c, "%d", i);
+        sprintf(c, " %d", i);
         string cmd = pref + c + " infinite";
         cout<<cmd<<endl;
-        bbpressurecmd.push_back(cmd);
+        bbpressurecmd[i]=cmd;
     }
     loadbenchmark();
     getbenchmarksensitive();
