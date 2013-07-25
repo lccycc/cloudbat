@@ -32,6 +32,8 @@ $(OBJ)%.o: $1/%.cpp
 endef
 
 all:always $(targets)
+runfootprintsched:
+	$(V) time $(OBJ)/main 1>log/schedout 2>log/schederr
 runbubblebuild:
 	$(V) $(OBJ)/bubblebuild
 

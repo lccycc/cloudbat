@@ -100,10 +100,15 @@ void getsensitive(NDC ndc, ofstream &fout){
 void loadbenchmark(){
     ifstream fin("./benchmark/speccmd.cmd");
     string name, dir, cmd;
+    bool cont = false;
     while(std::getline(fin, name)){
         std::getline(fin, dir);
         std::getline(fin, cmd);
-        benchmarklist.push_back(NDC(name, dir, cmd));
+        if (name.compare("omnetpp") == 0){
+            cont = true;
+        }
+        if (cont)
+            benchmarklist.push_back(NDC(name, dir, cmd));
     }
 }
 void getbenchmarksensitive(){

@@ -3,19 +3,13 @@
 #include "include/head.h"
 #include "present/present.h"
 #include "sched/sched.h"
-//Sched(K, P);
-Sched sched(4,2);
+//Sched(K+P, P);
+Sched sched(12,2);
 int main(){
-    /*
-    for (int i = 10; i>=1; i--){
-        char tp[20];
-        sprintf(tp, "%d", i);
-        string name = string("./stupidtest/sleep")+tp;
-        sched.addtask(name, "sh "+name, "");
-    }
-    */
+    sched.method = FOOTPRINTMETHOD;
     //sched.loadtasklist(string("bubbletest/data/tasklist"));
     sched.loadbenchmark();
+    //sched.printall();
     pthread_t ppush;
     pthread_create(&ppush, NULL, sched._trypush, &sched);
     sleep(4);

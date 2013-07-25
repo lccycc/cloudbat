@@ -29,7 +29,7 @@ public:
     sem_t arrmtx;
     sem_t wfttr;
 
-    Sched(int _K, int _P);
+    Sched(int _KPP, int _P);
     double gettime();
 
     int addtask(string name, string cmd, string datafile);
@@ -46,6 +46,8 @@ public:
 //-----------------
     double try_getworkload(int u);
     double getworkload(vector<int> &ids);
+    double getsingleworkload(vector<int> &ids, int spe);
+    void printall();
 
     void taskfinish(int k);
     static void* _trypush(void* args);

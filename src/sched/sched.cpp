@@ -2,11 +2,11 @@
 #define SCHED_CPP
 #include "sched.h"
 ofstream ferr("./log/sched.msg");
-Sched::Sched(int _K, int _P){
+Sched::Sched(int _KPP, int _P){
 
     cachesize = (1<<17);
 
-    K = _K;
+    K = _KPP-_P;
     P = _P;
     nexttaskid = 0;
 
@@ -43,7 +43,7 @@ void Sched::loadbenchmark(){
     map<string, string> di;
     map<string, string> cm;
 
-    ifstream tin("./benchmark/footprint/timecost");
+    ifstream tin("./benchmark/timecost");
     double timecost;
     while (tin>>name>>timecost){
         tc[name] = timecost;
@@ -60,14 +60,14 @@ void Sched::loadbenchmark(){
     }
     fin.close();
 
-    ifstream oin("./benchmark/footprint/order");
+    ifstream oin("./benchmark/order");
     while (std::getline(oin, name)){
         dir = di[name];
         cmd = cm[name];
         int id = task.size();
         Present p(name, cmd, id);
         p.dir = dir;
-        p.init("./benchmark/"+name+".dat");
+        p.init("./benchmark/footprint/"+name+".dat");
         p.total_time = tc[name];
         task.push_back(p);
     }
@@ -98,13 +98,41 @@ double Sched::getfpfilltime(vector<int> &ids){
 }
 double Sched::getfpworkload(vector<int> &ids){
     double ft = getfpfilltime(ids);
-    assert(ft>0);
     double mn = 0;
     for (unsigned i = 0; i<ids.size(); i++){
         mn += task[ids[i]].missnum(ft);
     }
     return mn;
 }
+double Sched::getsingleworkload(vector<int> &ids, int spe){
+    double ft = getfpfilltime(ids);
+    return task[spe].missnum(ft);
+}
+void Sched::printall(){
+    vector<double> swl;
+    for (unsigned i = 0; i<task.size();i++){
+        vector<int> ids;
+        ids.push_back(i);
+        swl.push_back(getsingleworkload(ids, i));
+    }
+    for (int i = 0; i<task.size(); i++){
+        ferr<<"\t"<<task[i].name;
+    }
+    ferr<<endl;
+    for (unsigned i = 0; i<task.size(); i++){
+        ferr<<task[i].name;
+        for (unsigned j = 0; j<task.size(); j++){
+            vector<int> ids;
+            ids.push_back(i);
+            ids.push_back(j);
+            double r = getsingleworkload(ids, i);
+            ferr<<"\t"<<r;
+        }
+        ferr<<endl;
+    }
+}
+
+
 double Sched::getbbpressure(vector<int> &ids){
     vector<int> bblevel;
     for (unsigned i = 0; i<ids.size(); i++){
@@ -128,6 +156,8 @@ double Sched::getworkload(vector<int> &ids){
         return getbbworkload(ids);
     }
 }
+
+
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
@@ -292,6 +322,14 @@ vector<int> Sched::gettimetable(vector<int> list){
     ferr<<"K = "<<K<<", P = "<<P<<endl;
     int psperK =  K/P;
     vector<pair<int, double> > lev0;
+
+    vector<int> singleworkload;
+    for (int i = 0; i<K; i++){
+        vector<int> ids;
+        ids.push_back(list[i]);
+        double r = getworkload(ids);
+        singleworkload.push_back(r);
+    }
     for (int i = 0; i<(1<<K); i++){
         if (count1bit(i) != P){
             continue;
@@ -314,7 +352,11 @@ vector<int> Sched::gettimetable(vector<int> list){
             */
             if (i&(1<<j)) ferr<<j;
         }
-        ferr<<"  "<<mr<<endl;
+        double testdeta = mr;
+        for (int j = 0; j<K; j++) if (i&(1<<j)){
+            testdeta -= singleworkload[j];
+        }
+        ferr<<"  "<<mr<<" "<<testdeta<<endl;
     }
     vector<int> que;
     FUSTYPE fus;
