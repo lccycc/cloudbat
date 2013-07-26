@@ -37,6 +37,13 @@ void Sched::loadtasklist(string tasklist){
     fin.close();
 }
 void Sched::loadbenchmark(){
+    if (method == FOOTPRINTMETHOD){
+        ferr<<"Footprint Schedule!"<<endl;
+    }else
+    if (method == BUBBLEMETHOD){
+        ferr<<"BUBBLE Schedule!"<<endl;
+    }
+
     string name, dir, cmd;
 
     map<string, double> tc;
@@ -61,7 +68,7 @@ void Sched::loadbenchmark(){
     fin.close();
 
     ifstream oin("./benchmark/order");
-    while (std::getline(oin, name)){
+    while (oin>>name){
         dir = di[name];
         cmd = cm[name];
         int id = task.size();
@@ -71,6 +78,7 @@ void Sched::loadbenchmark(){
         task.push_back(p);
     }
     oin.close();
+    ferr<<"tasksize = "<<task.size()<<endl;
 
     if (method == FOOTPRINTMETHOD){
         for (unsigned i = 0; i<task.size(); i++){

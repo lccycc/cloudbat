@@ -7,10 +7,10 @@
 Sched sched(12,2);
 int main(int argc, char** argv){
     assert(argc>1);
-    if (argv[1].strstr("FOOTPRINT")!=0){
+    if (strstr(argv[1], "FOOTPRINT")!=0){
         sched.method = FOOTPRINTMETHOD;
     }
-    if (argv[1].strstr("BUBBLE")!=0){
+    if (strstr(argv[1], "BUBBLE")!=0){
         sched.method = BUBBLEMETHOD;
     }
 
