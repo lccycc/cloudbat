@@ -96,4 +96,9 @@ int runandgetpid(string dir, string cmd, int core){
     cout<<"pid = "<<pid<<endl;
     return pid;
 }
+string getfirstword(string s){
+    int fd = s.find(" ");
+    if (fd == -1) fd = s.length();
+    return s.substr(0, fd);
+}
 #endif

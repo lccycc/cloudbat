@@ -12,4 +12,5 @@ void pausepid(int pid);
 void killpid(int pid);
 void fgpid(int pid);
 int runandgetpid(string dir, string cmd, int core);
+string getfirstword(string s);
 #endif

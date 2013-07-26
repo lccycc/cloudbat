@@ -11,6 +11,7 @@ Present::Present(string _name, string _cmd, int _id){
     id = _id;
 
     pid = -1;
+    cputime = 0;
 }
 
 void Present::init(string filename){
@@ -38,13 +39,13 @@ void Present::init(string filename){
     fclose(f);
 }
 double Present::missnum(double filltime){
-    filltime = filltime * N /(total_time*1000000000);
+    filltime = filltime * N /(stdruntime*1000000000);
     int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((LL)filltime);
     idx = min(idx, cnt-1);
     return mr[idx]*N/filltime;
 }
 double Present::fillcache(double filltime){
-    filltime = filltime * N /(total_time*1000000000);
+    filltime = filltime * N /(stdruntime*1000000000);
     int idx =  sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS> ((uLL)filltime);
     idx = min(idx, cnt-1);
     return ft2c_c[idx];

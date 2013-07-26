@@ -20,6 +20,8 @@ int main(){
     pthread_join(ppush, NULL);
     pthread_join(pinter, NULL);
 
+    sched.printcputime();
+
     return 0;
 }
 #endif

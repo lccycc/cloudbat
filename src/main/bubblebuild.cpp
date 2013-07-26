@@ -25,6 +25,8 @@ public:
 vector<NDC> benchmarklist;
 
 map<int, string> bbpressurecmd;
+NDC bbsensitive("eup", "", "/home/lcc/cloudbat/bubbletest/eup 5 infinite");
+
 double getpmu(){
     const int maxsave = 10;
     double r;
@@ -57,25 +59,17 @@ void runoncore(string cmd, int core){
 }
 
 double getdisturb(NDC ndc, vector<int> level){
-    vector<int> pid;
     chdir(ndc.dir.c_str());
     runoncore(ndc.cmd, 0);
     //int cmdpid = runandgetpid(ndc.dir, ndc.cmd, 0);
-    int fd = ndc.cmd.find(" ");
-    if (fd == -1) fd = ndc.cmd.length();
-    string cmdcut = ndc.cmd.substr(0, fd);
-    int cmdpid = getpid(cmdcut);
+    int cmdpid = getpid(getfirstword(ndc.cmd));
     cout<<"cmdpid = "<<cmdpid<<endl;
     for (unsigned i = 0; i<level.size(); i++){
-       // pid.push_back(runandgetpid("", bbpressurecmd[level[i]], i+1));
        runoncore(bbpressurecmd[level[i]], i+1);
-       int bbpid = getpid(bbpressurecmd[level[i]]);
-       cout<<"bbpid = "<<bbpid<<endl;
-       pid.push_back(bbpid);
     }
     double pmu = getpmu();
     killpid(cmdpid);
-    system("killall eup -9");
+    system("killall estream -9");
     /*
     for (unsigned i = 0; i<pid.size(); i++){
         killpid(pid[i]);
@@ -97,6 +91,23 @@ void getsensitive(NDC ndc, ofstream &fout){
         }
     }
 }
+void getpressure(NDC ndc, ofstream &fout){
+    chdir(bbsensitive.dir.c_str());
+    runoncore(bbsensitive.cmd, 0);
+    double freerun = getpmu();
+
+    chdir(ndc.dir.c_str());
+    runoncore(ndc.cmd, 1);
+    int pid = getpid(getfirstword(ndc.cmd));
+    cout<<" benchpid = "<<pid<<endl;
+
+    double ds = getpmu();
+    fout<<ndc.name<<"\t"<<(freerun-ds)/freerun<<endl;
+
+    system("killall eup -9");
+    killpid(pid);
+}
+
 void loadbenchmark(){
     ifstream fin("./benchmark/speccmd.cmd");
     string name, dir, cmd;
@@ -104,10 +115,12 @@ void loadbenchmark(){
     while(std::getline(fin, name)){
         std::getline(fin, dir);
         std::getline(fin, cmd);
+        /*
         if (name.compare("omnetpp") == 0){
             cont = true;
         }
         if (cont)
+        */
             benchmarklist.push_back(NDC(name, dir, cmd));
     }
 }
@@ -118,43 +131,64 @@ void getbenchmarksensitive(){
     }
     fout.close();
 }
+void getbenchmarkpressure(){
+    ofstream fout("./benchmark/bubble/benchmarkpplevel.dat");
+    for (unsigned i = 0; i<benchmarklist.size(); i++){
+        getpressure(benchmarklist[i], fout);
+    }
+    fout.close();
+}
+void getcorunpressure(){
+    ofstream fout("./benchmark/bubble/corunlevel.dat");
+
+    double freerun = getdisturb(bbsensitive, vector<int>());
+    for (int i = 1; i<=10; i++){
+        vector<int> ids;
+        ids.push_back(i);
+        double ds = getdisturb(bbsensitive, ids);
+        double rate = (freerun-ds)/freerun;
+        fout<<"1\t"<<i<<"\t"<<rate<<endl;
+    }
+    for (int i = 1; i<=10; i++){
+        for (int j = i; j<=10; j++){
+            vector<int> ids;
+            ids.push_back(i);
+            ids.push_back(j);
+            double ds = getdisturb(bbsensitive, ids);
+            double rate = (freerun-ds)/freerun;
+            fout<<"2\t"<<i<<"\t"<<j<<"\t"<<rate<<endl;
+        }
+    }
+    for (int i = 1; i<=10; i++){
+        for (int j = i; j<=10; j++){
+            for (int k = j; k<=10; k++){
+                vector<int> ids;
+                ids.push_back(i);
+                ids.push_back(j);
+                ids.push_back(k);
+                double ds = getdisturb(bbsensitive, ids);
+                double rate = (freerun-ds)/freerun;
+                fout<<"3\t"<<i<<"\t"<<j<<"\t"<<k<<"\t"<<rate<<endl;
+            }
+        }
+    }
+    fout.close();
+}
 
 int main(){
 
     for (int i = 1; i<=10; i++){
-        string pref = "~/cloudbat/bubbletest/eup ";
+        string pref = "/home/lcc/cloudbat/bubbletest/estream ";
         char c[5];
         sprintf(c, " %d", i);
         string cmd = pref + c + " infinite";
-        cout<<cmd<<endl;
         bbpressurecmd[i]=cmd;
     }
     loadbenchmark();
-    getbenchmarksensitive();
+    //getbenchmarksensitive();
+    //getbenchmarkpressure();
+    getcorunpressure();
 
-
-    /*
-    char sensitive[] = "./bubbletest/eup 5";
-    double runtime[110];
-    runtime[0] = getsystime();
-    system(sensitive);
-    runtime[0] = getsystime() - runtime[0];
-    double pair[12][12];
-    for (int i = 1; i<=20; i++){
-        pthread_t p1, p2;
-        threadstop = false;
-        pthread_create(&p1, NULL, runpressure, &i);
-        sleep(1);
-
-        runtime[i] = getsystime();
-        system(sensitive);
-        runtime[i]  = getsystime() - runtime[i];
-        cerr<<runtime[i]<<endl;
-
-        threadstop = true;
-        pthread_join(p1, NULL);
-    }
-    */
     return 0;
 }
 #endif

@@ -14,15 +14,16 @@ public:
     pthread_t thread;
     int id;
     int pid;
+    double cputime, lastrunt;
+
+    double stdruntime;
 
     Present();
     Present(string _name, string _cmd, int _id);
 //----footprint----
     double ft2c_c[WindowSub];
     double mr[WindowSub];
-
     LL N, M;
-    double total_time;
     int cnt;
     void init(string filename);
     double missnum(double filltime);

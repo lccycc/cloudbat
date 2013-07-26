@@ -48,6 +48,7 @@ public:
     double getworkload(vector<int> &ids);
     double getsingleworkload(vector<int> &ids, int spe);
     void printall();
+    void printcputime();
 
     void taskfinish(int k);
     static void* _trypush(void* args);

@@ -68,7 +68,7 @@ void Sched::loadbenchmark(){
         Present p(name, cmd, id);
         p.dir = dir;
         p.init("./benchmark/footprint/"+name+".dat");
-        p.total_time = tc[name];
+        p.stdruntime = tc[name];
         task.push_back(p);
     }
 }
@@ -131,8 +131,12 @@ void Sched::printall(){
         ferr<<endl;
     }
 }
-
-
+void Sched::printcputime(){
+    for (unsigned i = 0; i<task.size(); i++){
+        double deta = task[i].cputime - task[i].stdruntime;
+        ferr<<task[i].name<<"\t"<<task[i].cputime<<"\t"<<deta/task[i].stdruntime<<endl;
+    }
+}
 double Sched::getbbpressure(vector<int> &ids){
     vector<int> bblevel;
     for (unsigned i = 0; i<ids.size(); i++){
@@ -298,15 +302,22 @@ void* Sched::runthread(void *arg){
     Sched &s = *((Sched*)((void**)arg)[0]);
     int id = *((int*)((void**)arg)[1]);
     sem_post(&s.wfttr);
+
     chdir(s.task[id].dir.c_str());
+
+    s.task[id].lastrunt = getsystime();
     system(s.task[id].cmd.c_str());
+    s.task[id].cputime += getsystime() - s.task[id].lastrunt;
+
     s.taskfinish(id);
 }
 void Sched::pausetask(int id){
     pausepid(task[id].pid);
+    task[id].cputime += getsystime() - task[id].lastrunt;
     //ferr<<"task pause, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 void Sched::fgtask(int id){
+    task[id].lastrunt = getsystime();
     fgpid(task[id].pid);
     //ferr<<"task fg, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
