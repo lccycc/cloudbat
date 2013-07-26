@@ -67,9 +67,40 @@ void Sched::loadbenchmark(){
         int id = task.size();
         Present p(name, cmd, id);
         p.dir = dir;
-        p.init("./benchmark/footprint/"+name+".dat");
         p.stdruntime = tc[name];
         task.push_back(p);
+    }
+    oin.close();
+
+    if (method == FOOTPRINTMETHOD){
+        for (unsigned i = 0; i<task.size(); i++){
+            task[i].footprint_init("./benchmark/footprint/"+task[i].name+".dat");
+        }
+    }else
+    if (method == BUBBLEMETHOD){
+        bubble.init();
+        ifstream bsin("./benchmark/bubble/sensitivecurve.dat");
+        string name;
+        int p, lev;
+        double delay;
+        while (bsin>>name>>p>>lev>>delay){
+            for (unsigned i = 0; i<task.size(); i++){
+                if (task[i].name.compare(name) == 0){
+                    task[i].delay[p][lev] = delay;
+                }
+            }
+        }
+        bsin.close();
+        ifstream bpin("./benchmark/bubble/benchmarkpplevel.dat");
+        double pplev;
+        while (bpin>>name>>pplev){
+            for (unsigned i = 0; i<task.size(); i++){
+                if (task[i].name.compare(name) == 0){
+                    task[i].plevel = bubble.findcloseplevel(pplev);
+                }
+            }
+        }
+        bpin.close();
     }
 }
 
@@ -137,18 +168,16 @@ void Sched::printcputime(){
         ferr<<task[i].name<<"\t"<<task[i].cputime<<"\t"<<deta/task[i].stdruntime<<endl;
     }
 }
-double Sched::getbbpressure(vector<int> &ids){
-    vector<int> bblevel;
-    for (unsigned i = 0; i<ids.size(); i++){
-        bblevel.push_back(task[ids[i]].plevel);
-    }
-    return bubble.lookup(bblevel);
-}
 double Sched::getbbworkload(vector<int> &ids){
-    int plevel = getbbpressure(ids);
     double tot = 0;
     for (unsigned i = 0; i<ids.size(); i++){
-        tot += task[ids[i]].delay[plevel];
+        vector<int> tp;
+        for (unsigned j = 0; j<ids.size(); j++){
+            if (j != i){
+                tp.push_back(task[ids[j]].plevel);
+            }
+        }
+        tot += bubble.lookup(task[ids[i]], tp);
     }
     return tot;
 }
@@ -165,7 +194,7 @@ double Sched::getworkload(vector<int> &ids){
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);
-    p.init(datafile);
+    p.footprint_init(datafile);
     task.push_back(p);
     return id;
 }

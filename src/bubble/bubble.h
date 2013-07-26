@@ -1,15 +1,18 @@
 #ifndef BUBBLE_H
 #define BUBBLE_H
 #include "include/head.h"
-const int MAX_BUBBLE_LEVEL = 50;
+#include "present/present.h"
+const int MAX_BUBBLE_LEVEL = 10;
 class Bubble{
 public:
-    int lookup(vector<int> &ids);
+    double lookup(Present &p, vector<int> &lev);
+    int findcloseplevel(double delay);
     void init();
 private:
-    map<LL, int> up;
+    map<LL, double> up;
+    map<LL, int> db;
+    //u*(i-1) + (1-u)*i
 
-    LL compress(vector<int> &ids);
-    void add(vector<int> &ids, int lv);
+    LL compress(vector<int> &lev);
 };
 #endif

@@ -41,7 +41,6 @@ public:
     double getfpworkload(vector<int> &ids);
 //----bubble------
     Bubble bubble;
-    double getbbpressure(vector<int> &ids);
     double getbbworkload(vector<int> &ids);
 //-----------------
     double try_getworkload(int u);

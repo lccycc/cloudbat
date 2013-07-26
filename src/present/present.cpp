@@ -14,7 +14,7 @@ Present::Present(string _name, string _cmd, int _id){
     cputime = 0;
 }
 
-void Present::init(string filename){
+void Present::footprint_init(string filename){
     FILE *f = fopen(filename.c_str(), "r");
     fscanf(f, "N:%llu M:%llu total_time:%*lf", &N, &M);
     int i, ws;

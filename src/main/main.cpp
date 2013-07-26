@@ -5,8 +5,15 @@
 #include "sched/sched.h"
 //Sched(K+P, P);
 Sched sched(12,2);
-int main(){
-    sched.method = FOOTPRINTMETHOD;
+int main(int argc, char** argv){
+    assert(argc>1);
+    if (argv[1].strstr("FOOTPRINT")!=0){
+        sched.method = FOOTPRINTMETHOD;
+    }
+    if (argv[1].strstr("BUBBLE")!=0){
+        sched.method = BUBBLEMETHOD;
+    }
+
     //sched.loadtasklist(string("bubbletest/data/tasklist"));
     sched.loadbenchmark();
     //sched.printall();
