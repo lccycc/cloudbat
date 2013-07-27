@@ -4,7 +4,7 @@
 #include "present/present.h"
 #include "sched/sched.h"
 //Sched(K+P, P);
-Sched sched(12,2);
+Sched sched(6,2);
 int main(int argc, char** argv){
     assert(argc>1);
     if (strstr(argv[1], "FOOTPRINT")!=0){

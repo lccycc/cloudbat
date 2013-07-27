@@ -33,9 +33,9 @@ endef
 
 all:always $(targets)
 runfootprintsched:
-	$(V) time $(OBJ)/main FOOTPRINT 1>log/schedout 2>log/schederr
+	$(V) time $(OBJ)/main FOOTPRINT 1>log/sched.out 2>log/sched.err
 runbubblesched:
-	$(V) time $(OBJ)/main BUBBLE 1>log/schedout 2>log/schederr
+	$(V) time $(OBJ)/main BUBBLE 1>log/sched.out 2>log/sched.err
 runbubblebuild:
 	$(V) $(OBJ)/bubblebuild
 

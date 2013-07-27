@@ -10,7 +10,7 @@ public:
     void init();
 private:
     map<LL, double> up;
-    map<LL, int> db;
+    map<LL, double> db;
     //u*(i-1) + (1-u)*i
 
     LL compress(vector<int> &lev);

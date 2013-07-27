@@ -59,7 +59,6 @@ void Sched::loadbenchmark(){
 
     ifstream fin("./benchmark/speccmd.cmd");
     while (std::getline(fin, name)){
-        cout<<name<<endl;
         std::getline(fin, dir);
         std::getline(fin, cmd);
         di[name] = dir;
@@ -105,6 +104,7 @@ void Sched::loadbenchmark(){
             for (unsigned i = 0; i<task.size(); i++){
                 if (task[i].name.compare(name) == 0){
                     task[i].plevel = bubble.findcloseplevel(pplev);
+                    ferr<<"task "<<i<<" "<<task[i].name<<" pressure level: "<<task[i].plevel<<endl;
                 }
             }
         }
@@ -197,8 +197,6 @@ double Sched::getworkload(vector<int> &ids){
         return getbbworkload(ids);
     }
 }
-
-
 int Sched::addtask(string name, string cmd, string datafile){
     int id = task.size();
     Present p(name, cmd, id);

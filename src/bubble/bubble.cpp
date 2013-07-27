@@ -5,7 +5,7 @@
 void Bubble::init(){
     ifstream fin("./benchmark/bubble/corunlevel.dat");
     int cop;
-    vector<LL> levav[5];
+    vector<LL> levsav[5];
     while (fin>>cop){
         vector<int> lev;
         int x;
@@ -17,22 +17,22 @@ void Bubble::init(){
         fin>>delay;
         LL addr = compress(lev);
         up[addr] = delay;
-        levav[cop].push_back(addr);
+        levsav[cop].push_back(addr);
     }
     map<int, map<int, double> > stddelay;
     for (int p = 1; p<=3; p++){
         stddelay[p][0] = 0;
         for (int i = 1; i<=MAX_BUBBLE_LEVEL; i++){
             vector<int> lev;
-            for (int j = 0; j<i; j++){
+            for (int j = 0; j<p; j++){
                 lev.push_back(i);
             }
             stddelay[p][i] = up[compress(lev)];
         }
     }
     for (int p = 1; p<=3; p++){
-        for (unsigned t = 0; t<levav[p].size(); t++){
-            LL addr = levav[p][t];
+        for (unsigned t = 0; t<levsav[p].size(); t++){
+            LL addr = levsav[p][t];
             double r = up[addr];
             int i;
             for (i = 1; i<MAX_BUBBLE_LEVEL; i++){
@@ -72,10 +72,10 @@ LL Bubble::compress(vector<int> &lev){
         if (lev[i] <= 0){
             lev[i] = 1;
         }
-        if (lev[i] >= MAX_BUBBLE_LEVEL){
-            lev[i] = MAX_BUBBLE_LEVEL - 1;
+        if (lev[i] > MAX_BUBBLE_LEVEL){
+            lev[i] = MAX_BUBBLE_LEVEL;
         }
-        a = a*MAX_BUBBLE_LEVEL + lev[i];
+        a = a*(MAX_BUBBLE_LEVEL+1) + lev[i];
     }
     return a;
 }
