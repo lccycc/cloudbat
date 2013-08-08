@@ -389,20 +389,9 @@ vector<int> Sched::gettimetable(vector<int> list){
         double mr = getworkload(ids);
         lev0.push_back(make_pair(i, mr));
         for (int j = 0; j<K; j++){
-            /*
-            if (i&(1<<j)){
-                ferr<<'1';
-            }else{
-                ferr<<'0';
-            }
-            */
             if (i&(1<<j)) ferr<<j;
         }
-        double testdeta = mr;
-        for (int j = 0; j<K; j++) if (i&(1<<j)){
-            testdeta -= singleworkload[j];
-        }
-        ferr<<"  "<<mr<<" "<<testdeta<<endl;
+        ferr<<"  "<<mr<<endl;
     }
     vector<int> que;
     FUSTYPE fus;

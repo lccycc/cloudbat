@@ -15,6 +15,7 @@ void Bubble::init(){
         }
         double delay;
         fin>>delay;
+        delay /= 1-delay;
         LL addr = compress(lev);
         up[addr] = delay;
         levsav[cop].push_back(addr);

@@ -35,7 +35,7 @@ double getpmu(){
     ifstream resetin("/proc/helloworld");
     resetin>>r;
     resetin.close();
-    sleep(2+maxsave);
+    sleep(2+maxsave*10);
     ifstream fin("/proc/helloworld");
 
 
@@ -86,7 +86,7 @@ void getsensitive(NDC ndc, ofstream &fout){
                 lev.push_back(i);
             }
             double ds = getdisturb(ndc, lev);
-            double res = (freerun-ds)/freerun;
+            double res = (freerun-ds)/ds;
             fout<<ndc.name<<' '<<P<<' '<<i<<' '<<res<<endl;
         }
     }
@@ -102,7 +102,7 @@ void getpressure(NDC ndc, ofstream &fout){
     cout<<" benchpid = "<<pid<<endl;
 
     double ds = getpmu();
-    fout<<ndc.name<<"\t"<<(freerun-ds)/freerun<<endl;
+    fout<<ndc.name<<"\t"<<(freerun-ds)/ds<<endl;
 
     system("killall eup -9");
     killpid(pid);
@@ -126,7 +126,7 @@ void loadbenchmark(){
 }
 void getbenchmarksensitive(){
     ofstream fout("./benchmark/bubble/benchmarklevel.dat");
-    for (unsigned i = 0; i<benchmarklist.size(); i++){
+    for (unsigned i = 9; i<benchmarklist.size(); i++){
         getsensitive(benchmarklist[i], fout);
     }
     fout.close();
@@ -146,7 +146,7 @@ void getcorunpressure(){
         vector<int> ids;
         ids.push_back(i);
         double ds = getdisturb(bbsensitive, ids);
-        double rate = (freerun-ds)/freerun;
+        double rate = (freerun-ds)/ds;
         fout<<"1\t"<<i<<"\t"<<rate<<endl;
     }
     for (int i = 1; i<=10; i++){
@@ -155,7 +155,7 @@ void getcorunpressure(){
             ids.push_back(i);
             ids.push_back(j);
             double ds = getdisturb(bbsensitive, ids);
-            double rate = (freerun-ds)/freerun;
+            double rate = (freerun-ds)/ds;
             fout<<"2\t"<<i<<"\t"<<j<<"\t"<<rate<<endl;
         }
     }
@@ -167,7 +167,7 @@ void getcorunpressure(){
                 ids.push_back(j);
                 ids.push_back(k);
                 double ds = getdisturb(bbsensitive, ids);
-                double rate = (freerun-ds)/freerun;
+                double rate = (freerun-ds)/ds;
                 fout<<"3\t"<<i<<"\t"<<j<<"\t"<<k<<"\t"<<rate<<endl;
             }
         }
@@ -185,9 +185,9 @@ int main(){
         bbpressurecmd[i]=cmd;
     }
     loadbenchmark();
-    //getbenchmarksensitive();
+    getbenchmarksensitive();
     //getbenchmarkpressure();
-    getcorunpressure();
+    //getcorunpressure();
 
     return 0;
 }
