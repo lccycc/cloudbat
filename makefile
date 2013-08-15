@@ -36,6 +36,10 @@ runfootprintsched:
 	$(V) time $(OBJ)/main FOOTPRINT 1>log/sched.out 2>log/sched.err
 runbubblesched:
 	$(V) time $(OBJ)/main BUBBLE 1>log/sched.out 2>log/sched.err
+runnoprediction:
+	$(V) time $(OBJ)/main NOPREDICTION 1>log/sched.out 2>log/sched.err
+freerun:
+	$(V) time $(OBJ)/main FREERUN 1>log/sched.out 2>log/sched.err
 runbubblebuild:
 	$(V) $(OBJ)/bubblebuild
 

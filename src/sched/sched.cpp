@@ -190,6 +190,9 @@ double Sched::getbbworkload(vector<int> &ids){
     return tot;
 }
 double Sched::getworkload(vector<int> &ids){
+    if (method == NOPREDICTION){
+        return 0;
+    }
     if (method == FOOTPRINTMETHOD){
         return getfpworkload(ids);
     }else
@@ -551,7 +554,6 @@ void Sched::timeinterrupt(){
         sort(keep.begin(), keep.end());
 
         if (taskttpnt == -1){
-            std::random_shuffle(keep.begin(), keep.end());
             tasktimetable = gettimetable(keep);
             assert(tasktimetable.size());
             taskttpnt = 0;

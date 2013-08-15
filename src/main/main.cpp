@@ -6,12 +6,19 @@
 //Sched(K+P, P);
 Sched sched(8,4);
 int main(int argc, char** argv){
+    bool freerun = false;
     assert(argc>1);
     if (strstr(argv[1], "FOOTPRINT")!=0){
         sched.method = FOOTPRINTMETHOD;
     }
     if (strstr(argv[1], "BUBBLE")!=0){
         sched.method = BUBBLEMETHOD;
+    }
+    if (strstr(argv[1], "NOPREDICTION") != 0){
+        sched.method = NOPREDICTION;
+    }
+    if (strstr(argv[1], "FREERUN")!=0){
+        freerun = true;
     }
 
     //sched.loadtasklist(string("bubbletest/data/tasklist"));
@@ -22,10 +29,14 @@ int main(int argc, char** argv){
     sleep(4);
 
     pthread_t pinter;
-    pthread_create(&pinter, NULL, sched._timeinterrupt, &sched);
+    if (!freerun){
+        pthread_create(&pinter, NULL, sched._timeinterrupt, &sched);
+    }
 
     pthread_join(ppush, NULL);
-    pthread_join(pinter, NULL);
+    if (!freerun){
+        pthread_join(pinter, NULL);
+    }
 
     sched.printcputime();
 

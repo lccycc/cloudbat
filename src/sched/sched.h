@@ -8,6 +8,7 @@ class Sched{
 public:
 #define FOOTPRINTMETHOD 1
 #define BUBBLEMETHOD 2
+#define NOPREDICTION 3
     int method;
     int K;//the tasks that we could see
     int P;//the prosessors that we could  run
