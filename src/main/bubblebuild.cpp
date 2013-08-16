@@ -178,7 +178,7 @@ void getcorunpressure(){
 int main(){
 
     for (int i = 1; i<=10; i++){
-        string pref = "/home/lcc/cloudbat/bubbletest/estream ";
+        string pref = "~/cloudbat/bubbletest/estream ";
         char c[5];
         sprintf(c, " %d", i);
         string cmd = pref + c + " infinite";
