@@ -57,7 +57,7 @@ void Sched::loadbenchmark(){
     }
     tin.close();
 
-    ifstream fin("./benchmark/speccmd.cmd");
+    ifstream fin("./benchmark/cd.speccmd.cmd");
     while (std::getline(fin, name)){
         std::getline(fin, dir);
         std::getline(fin, cmd);
