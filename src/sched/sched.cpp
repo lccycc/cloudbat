@@ -58,6 +58,7 @@ void Sched::loadbenchmark(){
     tin.close();
 
     ifstream fin("./benchmark/cd.speccmd.cmd");
+    //ifstream fin("./benchmark/speccmd.cmd");
     while (std::getline(fin, name)){
         std::getline(fin, dir);
         std::getline(fin, cmd);
@@ -84,6 +85,11 @@ void Sched::loadbenchmark(){
             task[i].footprint_init("./benchmark/footprint/"+task[i].name+".dat");
         }
     }else
+	if (method == REUSEDSTMETHOD){
+		for (unsigned i = 0; i<task.size(); i++){
+			task[i].reusedst_init("./benchmark/reusedst/"+task[i].name+".dat");
+		}
+	}else
     if (method == BUBBLEMETHOD){
         bubble.init();
         ifstream bsin("./benchmark/bubble/sensitivecurve.dat");
@@ -135,6 +141,24 @@ double Sched::getfpfilltime(vector<int> &ids){
     }
     return l;
 }
+double Sched::getrdfilltime(vector<int> &ids){
+    const double MaxTime = 200.0 * 1000000000.0;
+    double l = 1, r = MaxTime;
+    double ttc = 0;
+    while (l+1<r){
+        double md = (l+r)/2;
+        ttc = 0;
+        for (unsigned i = 0; i<ids.size(); i++){
+            ttc +=task[ids[i]].rdfillcache(md);
+        }
+        if (ttc < cachesize){
+            l = md;
+        }else{
+            r = md;
+        }
+	}
+	return l;
+}
 double Sched::getfpworkload(vector<int> &ids){
     double ft = getfpfilltime(ids);
     double mn = 0;
@@ -171,10 +195,22 @@ void Sched::printall(){
     }
 }
 void Sched::printcputime(){
+	double tot = 0;
+	string model;
+	switch (method){
+	case FREERUN: model = "freerun"; break;
+	case NOPREDICTION: model = "noprediction"; break;
+	case FOOTPRINTMETHOD: model = "footprintmethod"; break;
+	case REUSEDSTMETHOD: model = "reusedstmethod"; break;
+	case BUBBLEMETHOD: model = "bubblemethod"; break;
+	};
+	ferr<<"model: "<<model<<endl;
     for (unsigned i = 0; i<task.size(); i++){
+		tot += task[i].cputime;
         double deta = task[i].cputime - task[i].stdruntime;
         ferr<<task[i].name<<"\t"<<task[i].cputime<<"\t"<<deta/task[i].stdruntime<<endl;
     }
+	ferr<<"CPU Time: "<<tot<<"s"<<endl;
 }
 double Sched::getbbworkload(vector<int> &ids){
     double tot = 0;
@@ -189,6 +225,14 @@ double Sched::getbbworkload(vector<int> &ids){
     }
     return tot;
 }
+double Sched::getrdworkload(vector<int> &ids){
+    double ft = getrdfilltime(ids);
+    double mn = 0;
+    for (unsigned i = 0; i<ids.size(); i++){
+        mn += task[ids[i]].rdmissnum(ft);
+    }
+	return mn;
+}
 double Sched::getworkload(vector<int> &ids){
     if (method == NOPREDICTION){
         return 0;
@@ -196,6 +240,9 @@ double Sched::getworkload(vector<int> &ids){
     if (method == FOOTPRINTMETHOD){
         return getfpworkload(ids);
     }else
+	if (method == REUSEDSTMETHOD){
+		return getrdworkload(ids);
+	}else
     if (method == BUBBLEMETHOD){
         return getbbworkload(ids);
     }
@@ -329,6 +376,7 @@ void Sched::runtask(int u){
             usleep(10000);
         }
         assert(task[u].pid>=0);
+		ferr<<"task "<<u<<" pid: "<<task[u].pid<<endl;
     }else{
         //this task is pause
         fgtask(u);
@@ -344,7 +392,9 @@ void* Sched::runthread(void *arg){
     chdir(s.task[id].dir.c_str());
 
     s.task[id].lastrunt = getsystime();
-    system(s.task[id].cmd.c_str());
+	string cmd = s.task[id].cmd;
+	cmd = cmd + " 1>/dev/null 2>/dev/null";
+    system(cmd.c_str());
     s.task[id].cputime += getsystime() - s.task[id].lastrunt;
 
     s.taskfinish(id);
@@ -360,6 +410,35 @@ void Sched::fgtask(int id){
     //ferr<<"task fg, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 
+double Sched::printfpmiss(vector<int> list, int i){
+	if (method != FOOTPRINTMETHOD){
+		return 0;
+	}
+	for (int j = K-1; j>=0; j--){
+		if ((1<<j) & i){
+			cout<<"1";
+		}else{
+			cout<<"0";
+		}
+	}
+	cout<<endl;
+	vector<int> ids;
+	for (int j = 0; j<K; j++){
+		if (i & (1<<j)){
+			ids.push_back(list[j]);
+		}
+	}
+	double ft = getfpfilltime(ids);
+	double tot = 0;
+	for (int j = 0; j<ids.size(); j++){
+		task[ids[j]].debug = true;
+		double wk = task[ids[j]].missnum(ft);
+		cout<<"debug: "<<ids[j]<<' '<<wk<<endl;
+		task[ids[j]].debug = false;
+		tot += wk;
+	}
+	return tot;
+}
 
 vector<int> Sched::gettimetable(vector<int> list){
     typedef unordered_map<int, pair<double, int> > FUSTYPE;
@@ -368,6 +447,9 @@ vector<int> Sched::gettimetable(vector<int> list){
     int K = list.size();
     assert(K<31);
     assert(K>=P);
+	while (K%P && P%(K%P)){
+		K--;
+	}
     ferr<<"K = "<<K<<", P = "<<P<<endl;
     int psperK =  K/P;
     vector<pair<int, double> > lev0;
@@ -379,6 +461,8 @@ vector<int> Sched::gettimetable(vector<int> list){
         double r = getworkload(ids);
         singleworkload.push_back(r);
     }
+
+	map<LL, double> debugdp;
     for (int i = 0; i<(1<<K); i++){
         if (count1bit(i) != P){
             continue;
@@ -390,12 +474,31 @@ vector<int> Sched::gettimetable(vector<int> list){
             }
         }
         double mr = getworkload(ids);
+		debugdp[i] = mr;
         lev0.push_back(make_pair(i, mr));
-        for (int j = 0; j<K; j++){
-            if (i&(1<<j)) ferr<<j;
-        }
-        ferr<<"  "<<mr<<endl;
     }
+	for (map<LL, double>::iterator it = debugdp.begin();
+			it != debugdp.end(); it++){
+		int i = it->first;
+		int j = (1<<K)-1-i;
+		double w1 = debugdp[i], w2 = debugdp[j];
+		cout<<getbits(i, K)<<"\t"<<w1<<"\t"<<getbits(i, K)<<"\t"<<w2<<"\t"<<w1+w2<<endl;
+	}
+	{
+		int i;
+		double w1, w2;
+		i = 1+2+4+(1<<6);
+		w1 = printfpmiss(list, i);
+		i = (1<<K)-1-i;
+		w2 = printfpmiss(list, i);
+		cout<<"w1 "<<w1<<" w2 "<<w2<<" + "<<w1+w2<<endl;
+
+		i = 1+(1<<3)+(1<<4)+(1<<6);
+		w1 = printfpmiss(list, i);
+		i = (1<<K)-1-i;
+		w2 = printfpmiss(list, i);
+		cout<<"w1 "<<w1<<" w2 "<<w2<<" + "<<w1+w2<<endl;
+	}
     vector<int> que;
     FUSTYPE fus;
     que.push_back(0);

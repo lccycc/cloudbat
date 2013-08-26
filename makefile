@@ -34,6 +34,8 @@ endef
 all:always $(targets)
 runfootprintsched:
 	$(V) time $(OBJ)/main FOOTPRINT 1>log/sched.out 2>log/sched.err
+runreusedstsched:
+	$(V) time $(OBJ)/main REUSEDST 1>log/sched.out 2>log/sched.err
 runbubblesched:
 	$(V) time $(OBJ)/main BUBBLE 1>log/sched.out 2>log/sched.err
 runnoprediction:

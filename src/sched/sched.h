@@ -6,9 +6,11 @@
 #define SCHED_H
 class Sched{
 public:
+#define NOPREDICTION 0
 #define FOOTPRINTMETHOD 1
-#define BUBBLEMETHOD 2
-#define NOPREDICTION 3
+#define REUSEDSTMETHOD 2
+#define BUBBLEMETHOD 3
+#define FREERUN 4
     int method;
     int K;//the tasks that we could see
     int P;//the prosessors that we could  run
@@ -43,6 +45,9 @@ public:
 //----bubble------
     Bubble bubble;
     double getbbworkload(vector<int> &ids);
+//----reusedst----
+    double getrdfilltime(vector<int> &ids);
+	double getrdworkload(vector<int> &ids);
 //-----------------
     double try_getworkload(int u);
     double getworkload(vector<int> &ids);
@@ -59,6 +64,7 @@ public:
     static void* runthread(void *arg);
     void pausetask(int id);
     void fgtask(int id);
+	double printfpmiss(vector<int> list, int i);
     vector<int> gettimetable(vector<int> list);
     static void* _timeinterrupt(void* args);
     void timeinterrupt();

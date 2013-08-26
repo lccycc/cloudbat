@@ -4,21 +4,25 @@
 #include "present/present.h"
 #include "sched/sched.h"
 //Sched(K+P, P);
-Sched sched(8,4);
+Sched sched(12,4);
 int main(int argc, char** argv){
     bool freerun = false;
     assert(argc>1);
-    if (strstr(argv[1], "FOOTPRINT")!=0){
+    if (strstr(argv[1], "FOOTPRINT") != 0){
         sched.method = FOOTPRINTMETHOD;
-    }
-    if (strstr(argv[1], "BUBBLE")!=0){
+    }else
+    if (strstr(argv[1], "REUSEDST") != 0){
+        sched.method = REUSEDSTMETHOD;
+    }else
+    if (strstr(argv[1], "BUBBLE") != 0){
         sched.method = BUBBLEMETHOD;
-    }
+    }else
     if (strstr(argv[1], "NOPREDICTION") != 0){
         sched.method = NOPREDICTION;
     }
     if (strstr(argv[1], "FREERUN")!=0){
         freerun = true;
+		sched.method = FREERUN;
     }
 
     //sched.loadtasklist(string("bubbletest/data/tasklist"));

@@ -61,7 +61,6 @@ int getpid(string cmd){
         if (strstr(pscmd, cmd.c_str())!=NULL){
             pid = tpid;
             findit = true;
-            break;
         }
     }
     fclose(fp);
@@ -101,5 +100,16 @@ string getfirstword(string s){
     int fd = s.find(" ");
     if (fd == -1) fd = s.length();
     return s.substr(0, fd);
+}
+string getbits(int i, int K){
+	string s;
+	for (int j = K-1; j>=0; j--){
+		if (i&(1<<j)){
+			s += "1";
+		}else{
+			s += "0";
+		}
+	}
+	return s;
 }
 #endif
