@@ -43,7 +43,6 @@ int main(int argc, char** argv){
     }
 
     sched.printcputime();
-
     return 0;
 }
 #endif
