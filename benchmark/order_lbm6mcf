@@ -1,12 +1,13 @@
 perlbench
-bzip2
-gcc
+lbm
+lbm
+lbm
 bwaves
-mcf
 zeusmp
 namd
 dealII
 soplex
+mcf
 povray
 hmmer
 sjeng
@@ -14,7 +15,7 @@ libquantum
 h264ref
 tonto
 lbm
-omnetpp
+lbm
+lbm
 astar
-wrf
 sphinx3

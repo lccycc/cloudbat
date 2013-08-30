@@ -15,6 +15,10 @@ public:
     int K;//the tasks that we could see
     int P;//the prosessors that we could  run
     int cachesize;
+	string speccmd;
+	ofstream ferr;
+	vector<int> cpumask;
+
     vector<int> keep;//K tasks
     vector<int> running;
     vector<Present> task;//all tasks

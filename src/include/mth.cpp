@@ -58,7 +58,7 @@ int getpid(string cmd){
     bool findit = false;
     while (fscanf(fp, "%d", &tpid)!=EOF){
         fgets(pscmd, 488, fp);
-        if (strstr(pscmd, cmd.c_str())!=NULL){
+        if (strstr(pscmd, cmd.c_str())!=NULL && strstr(pscmd, "sh -c") == NULL){
             pid = tpid;
             findit = true;
         }

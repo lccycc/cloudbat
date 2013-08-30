@@ -4,7 +4,7 @@
 #include "present/present.h"
 #include "sched/sched.h"
 //Sched(K+P, P);
-Sched sched(12,4);
+Sched sched(16,4);
 int main(int argc, char** argv){
     bool freerun = false;
     assert(argc>1);

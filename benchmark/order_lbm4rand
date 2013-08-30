@@ -1,14 +1,14 @@
 perlbench
 bzip2
-gcc
+lbm
 bwaves
-mcf
 zeusmp
 namd
 dealII
-soplex
+lbm
 povray
 hmmer
+lbm
 sjeng
 libquantum
 h264ref

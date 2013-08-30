@@ -1,10 +1,25 @@
 #ifndef SCHED_CPP
 #define SCHED_CPP
 #include "sched.h"
-ofstream ferr("./log/sched.msg");
 Sched::Sched(int _KPP, int _P){
 
-    cachesize = (1<<17);
+	FILE *fin = fopen("./config", "r");
+	char tmp[200];
+	fscanf(fin, "cache %d\n", &cachesize);
+	fscanf(fin, "speccmd %s\n", tmp);
+	speccmd = string(tmp);
+	int cpuid, cpunum;
+	fscanf(fin, "%d", &cpunum);
+	while (cpunum--){
+		fscanf(fin, "%d", &cpuid);
+		cpumask.push_back(cpuid);
+	}
+	fclose(fin);
+
+	ferr.open("./log/sched.msg", ios::out);
+
+	ferr<<"cache = "<<cachesize<<endl;
+	ferr<<"speccmd = "<<speccmd<<endl;
 
     K = _KPP-_P;
     P = _P;
@@ -57,8 +72,7 @@ void Sched::loadbenchmark(){
     }
     tin.close();
 
-    ifstream fin("./benchmark/cd.speccmd.cmd");
-    //ifstream fin("./benchmark/speccmd.cmd");
+    ifstream fin(speccmd.c_str());
     while (std::getline(fin, name)){
         std::getline(fin, dir);
         std::getline(fin, cmd);
@@ -271,7 +285,7 @@ void Sched::taskfinish(int k){
 void* Sched::_trypush(void* args){
     Sched &s = *((Sched*)args);
     s.trypush();
-    ferr<<"Thread: _trypush end"<<endl;
+    s.ferr<<"Thread: _trypush end"<<endl;
     return NULL;
 }
 void Sched::trypush(){
@@ -477,6 +491,7 @@ vector<int> Sched::gettimetable(vector<int> list){
 		debugdp[i] = mr;
         lev0.push_back(make_pair(i, mr));
     }
+	/*
 	for (map<LL, double>::iterator it = debugdp.begin();
 			it != debugdp.end(); it++){
 		int i = it->first;
@@ -499,6 +514,7 @@ vector<int> Sched::gettimetable(vector<int> list){
 		w2 = printfpmiss(list, i);
 		cout<<"w1 "<<w1<<" w2 "<<w2<<" + "<<w1+w2<<endl;
 	}
+	*/
     vector<int> que;
     FUSTYPE fus;
     que.push_back(0);
