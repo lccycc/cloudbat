@@ -12,6 +12,7 @@ public:
 #define BUBBLEMETHOD 3
 #define FREERUN 4
     int method;
+	string model;
     int K;//the tasks that we could see
     int P;//the prosessors that we could  run
     int cachesize;
@@ -36,12 +37,12 @@ public:
     sem_t arrmtx;
     sem_t wfttr;
 
-    Sched(int _KPP, int _P);
+    void init(int _KPP, int _P);
     double gettime();
 
     int addtask(string name, string cmd, string datafile);
     void loadtasklist(string tasklist);
-    void loadbenchmark();
+    void loadbenchmark(string ordername);
 
 //----footprint----
     double getfpfilltime(vector<int> &ids);

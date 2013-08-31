@@ -1,7 +1,7 @@
 #ifndef SCHED_CPP
 #define SCHED_CPP
 #include "sched.h"
-Sched::Sched(int _KPP, int _P){
+void Sched::init(int _KPP, int _P){
 
 	FILE *fin = fopen("./config", "r");
 	char tmp[200];
@@ -15,11 +15,6 @@ Sched::Sched(int _KPP, int _P){
 		cpumask.push_back(cpuid);
 	}
 	fclose(fin);
-
-	ferr.open("./log/sched.msg", ios::out);
-
-	ferr<<"cache = "<<cachesize<<endl;
-	ferr<<"speccmd = "<<speccmd<<endl;
 
     K = _KPP-_P;
     P = _P;
@@ -51,7 +46,22 @@ void Sched::loadtasklist(string tasklist){
     }
     fin.close();
 }
-void Sched::loadbenchmark(){
+void Sched::loadbenchmark(string ordername){
+	switch (method){
+	case FREERUN: model = "freerun"; break;
+	case NOPREDICTION: model = "noprediction"; break;
+	case FOOTPRINTMETHOD: model = "foot"; break;
+	case REUSEDSTMETHOD: model = "reuse"; break;
+	case BUBBLEMETHOD: model = "bubble"; break;
+	};
+	char tmpk[20];
+	sprintf(tmpk, "K%d", K+P);
+	string ferrfile = "./log/"+model+"."+ordername+tmpk;
+	ferr.open(ferrfile.c_str(), ios::out);
+
+	ferr<<"cache = "<<cachesize<<endl;
+	ferr<<"speccmd = "<<speccmd<<endl;
+
     if (method == FOOTPRINTMETHOD){
         ferr<<"Footprint Schedule!"<<endl;
     }else
@@ -81,7 +91,8 @@ void Sched::loadbenchmark(){
     }
     fin.close();
 
-    ifstream oin("./benchmark/order");
+	string orderfile = "./benchmark/order_"+ordername;
+    ifstream oin(orderfile.c_str());
     while (oin>>name){
         dir = di[name];
         cmd = cm[name];
@@ -92,6 +103,7 @@ void Sched::loadbenchmark(){
         task.push_back(p);
     }
     oin.close();
+	assert(task.size() >= P);
     ferr<<"tasksize = "<<task.size()<<endl;
 
     if (method == FOOTPRINTMETHOD){
@@ -210,14 +222,6 @@ void Sched::printall(){
 }
 void Sched::printcputime(){
 	double tot = 0;
-	string model;
-	switch (method){
-	case FREERUN: model = "freerun"; break;
-	case NOPREDICTION: model = "noprediction"; break;
-	case FOOTPRINTMETHOD: model = "footprintmethod"; break;
-	case REUSEDSTMETHOD: model = "reusedstmethod"; break;
-	case BUBBLEMETHOD: model = "bubblemethod"; break;
-	};
 	ferr<<"model: "<<model<<endl;
     for (unsigned i = 0; i<task.size(); i++){
 		tot += task[i].cputime;

@@ -4,7 +4,7 @@
 #include "present/present.h"
 #include "sched/sched.h"
 //Sched(K+P, P);
-Sched sched(16,4);
+Sched sched;
 int main(int argc, char** argv){
     bool freerun = false;
     assert(argc>1);
@@ -24,10 +24,14 @@ int main(int argc, char** argv){
         freerun = true;
 		sched.method = FREERUN;
     }
+	int _K, _P;
+	sscanf(argv[2], "%d", &_K);
+	sscanf(argv[3], "%d", &_P);
+	sched.init(_K, _P);
+	string ordername(argv[4]);
 
-    //sched.loadtasklist(string("bubbletest/data/tasklist"));
-    sched.loadbenchmark();
-    //sched.printall();
+    sched.loadbenchmark(ordername);
+
     pthread_t ppush;
     pthread_create(&ppush, NULL, sched._trypush, &sched);
     sleep(4);
