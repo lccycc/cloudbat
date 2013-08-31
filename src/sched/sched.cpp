@@ -49,7 +49,7 @@ void Sched::loadtasklist(string tasklist){
 void Sched::loadbenchmark(string ordername){
 	switch (method){
 	case FREERUN: model = "freerun"; break;
-	case NOPREDICTION: model = "noprediction"; break;
+	case NOPREDICTION: model = "nopred"; break;
 	case FOOTPRINTMETHOD: model = "foot"; break;
 	case REUSEDSTMETHOD: model = "reuse"; break;
 	case BUBBLEMETHOD: model = "bubble"; break;

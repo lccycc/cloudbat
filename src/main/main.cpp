@@ -7,7 +7,7 @@
 Sched sched;
 int main(int argc, char** argv){
     bool freerun = false;
-    assert(argc>1);
+    assert(argc>=5);
     if (strstr(argv[1], "FOOTPRINT") != 0){
         sched.method = FOOTPRINTMETHOD;
     }else
