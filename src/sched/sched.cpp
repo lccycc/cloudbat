@@ -142,6 +142,12 @@ void Sched::loadbenchmark(string ordername){
         }
         bpin.close();
     }
+
+#ifdef SCHEDDEBUG
+	for (int i = 0; i<task.size(); i++){
+		totalworkload.push_back(0);
+	}
+#endif
 }
 
 double Sched::try_getworkload(int u){
@@ -193,7 +199,10 @@ double Sched::getfpworkload(vector<int> &ids){
     }
     return mn;
 }
-double Sched::getsingleworkload(vector<int> &ids, int spe){
+double Sched::getsingleworkload(vector<int> ids, int spe){
+	if (method != FOOTPRINTMETHOD){
+		return 0;
+	}
     double ft = getfpfilltime(ids);
     return task[spe].missnum(ft);
 }
@@ -413,13 +422,24 @@ void* Sched::runthread(void *arg){
 	string cmd = s.task[id].cmd;
 	cmd = cmd + " 1>/dev/null 2>/dev/null";
     system(cmd.c_str());
-    s.task[id].cputime += getsystime() - s.task[id].lastrunt;
+
+	s.taskstatic(id);
 
     s.taskfinish(id);
 }
+
+void Sched::taskstatic(int id){
+	double during = getsystime() - task[id].lastrunt;
+    task[id].cputime += during;
+#ifdef SCHEDDEBUG
+	double wk = getsingleworkload(running, id);
+	totalworkload[id] += wk * during;
+#endif
+}
+
 void Sched::pausetask(int id){
     pausepid(task[id].pid);
-    task[id].cputime += getsystime() - task[id].lastrunt;
+	taskstatic(id);
     //ferr<<"task pause, id = "<<id<<", pid = "<<task[id].pid<<endl;
 }
 void Sched::fgtask(int id){
@@ -495,6 +515,8 @@ vector<int> Sched::gettimetable(vector<int> list){
 		debugdp[i] = mr;
         lev0.push_back(make_pair(i, mr));
     }
+
+	//common below
 	/*
 	for (map<LL, double>::iterator it = debugdp.begin();
 			it != debugdp.end(); it++){
@@ -519,6 +541,7 @@ vector<int> Sched::gettimetable(vector<int> list){
 		cout<<"w1 "<<w1<<" w2 "<<w2<<" + "<<w1+w2<<endl;
 	}
 	*/
+	//commonend
     vector<int> que;
     FUSTYPE fus;
     que.push_back(0);

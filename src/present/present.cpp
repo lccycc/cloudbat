@@ -36,7 +36,7 @@ double Present::missnum(double filltime){
 	if (debug){
 		cout<<"debug: "<<idx<<' '<<cnt<<endl;
 	}
-    return mr[idx]*N/filltime;
+    return mr[idx]*(N/stdruntime);
 }
 double Present::fillcache(double filltime){
     filltime = filltime * N /(stdruntime*1000000000);
@@ -84,7 +84,7 @@ double Present::rdmissnum(double filltime){
 	int cache = rdfillcache(filltime);
 	int subc = sublog_value_to_index<MAX_WINDOW, SUBLOG_BITS>(cache);
 	subc = min(subc, rdmrcnt-1);
-    return rdmr[subc]*N/filltime;
+    return rdmr[subc]*N/stdruntime;
 }
 
 #endif

@@ -30,4 +30,7 @@ using namespace tr1;
 typedef unsigned int uint;
 typedef long long LL;
 typedef unsigned long long uLL;
+
+//#define SCHEDDEBUG
+
 #endif

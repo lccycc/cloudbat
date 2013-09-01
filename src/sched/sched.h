@@ -28,6 +28,8 @@ public:
     vector<int> tasktimetable;
     int taskttpnt;
 
+	vector<double> totalworkload;
+
     double history_pressure;
     double history_sensitive;
 
@@ -47,6 +49,7 @@ public:
 //----footprint----
     double getfpfilltime(vector<int> &ids);
     double getfpworkload(vector<int> &ids);
+    double getsingleworkload(vector<int> ids, int spe);
 //----bubble------
     Bubble bubble;
     double getbbworkload(vector<int> &ids);
@@ -56,7 +59,6 @@ public:
 //-----------------
     double try_getworkload(int u);
     double getworkload(vector<int> &ids);
-    double getsingleworkload(vector<int> &ids, int spe);
     void printall();
     void printcputime();
 
@@ -67,6 +69,7 @@ public:
     void tryrun();
     void runtask(int u);
     static void* runthread(void *arg);
+	void taskstatic(int id);
     void pausetask(int id);
     void fgtask(int id);
 	double printfpmiss(vector<int> list, int i);
