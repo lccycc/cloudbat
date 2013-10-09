@@ -6,6 +6,10 @@ void Sched::init(int _KPP, int _P){
 	FILE *fin = fopen("./config", "r");
 	char tmp[200];
 	fscanf(fin, "cache %d\n", &cachesize);
+	fscanf(fin, "bandwith %lf\n", &bandwith);
+	bandwith/=64;
+	/* for prefetch */
+	bandwith /= 2;
 	fscanf(fin, "speccmd %s\n", tmp);
 	speccmd = string(tmp);
 	int cpuid, cpunum;
@@ -106,11 +110,11 @@ void Sched::loadbenchmark(string ordername){
 	assert(task.size() >= P);
     ferr<<"tasksize = "<<task.size()<<endl;
 
-    if (method == FOOTPRINTMETHOD){
+    //if (method == FOOTPRINTMETHOD){
         for (unsigned i = 0; i<task.size(); i++){
             task[i].footprint_init("./benchmark/footprint/"+task[i].name+".dat");
         }
-    }else
+    //}else
 	if (method == REUSEDSTMETHOD){
 		for (unsigned i = 0; i<task.size(); i++){
 			task[i].reusedst_init("./benchmark/reusedst/"+task[i].name+".dat");
@@ -192,11 +196,17 @@ double Sched::getrdfilltime(vector<int> &ids){
 	return l;
 }
 double Sched::getfpworkload(vector<int> &ids){
+	const double L1 = 1000000;
+	const double L2 = 1000;
     double ft = getfpfilltime(ids);
     double mn = 0;
     for (unsigned i = 0; i<ids.size(); i++){
         mn += task[ids[i]].missnum(ft);
     }
+	if (mn>=bandwith){
+		//mn += L1;
+		mn += L2 * (mn-bandwith);
+	}
     return mn;
 }
 double Sched::getsingleworkload(vector<int> ids, int spe){
@@ -398,10 +408,12 @@ void Sched::runtask(int u){
         }
         string cutcmd = task[u].cmd.substr(0, cutpnt);
         ferr<<cutcmd<<endl;
-        while ((task[u].pid = getpid(cutcmd))==-1
-                    && getpidcnt--){
+        while (((task[u].pid = getpid(cutcmd))==-1
+                    || pidset.find(task[u].pid) != pidset.end())
+					&& getpidcnt--){
             usleep(10000);
         }
+		pidset.insert(task[u].pid);
         assert(task[u].pid>=0);
 		ferr<<"task "<<u<<" pid: "<<task[u].pid<<endl;
     }else{
@@ -528,13 +540,13 @@ vector<int> Sched::gettimetable(vector<int> list){
 	{
 		int i;
 		double w1, w2;
-		i = 1+2+4+(1<<6);
+		i = 1+2+4;
 		w1 = printfpmiss(list, i);
 		i = (1<<K)-1-i;
 		w2 = printfpmiss(list, i);
 		cout<<"w1 "<<w1<<" w2 "<<w2<<" + "<<w1+w2<<endl;
 
-		i = 1+(1<<3)+(1<<4)+(1<<6);
+		i = 1+2+(1<<4);
 		w1 = printfpmiss(list, i);
 		i = (1<<K)-1-i;
 		w2 = printfpmiss(list, i);
@@ -593,20 +605,6 @@ vector<int> Sched::gettimetable(vector<int> list){
     for (unsigned head = 0; head < queRD.size(); head++){
         uLL u = queRD[head];
 
-        /*
-        int extbit = 0;
-        uLL tmpu = u;
-        for (unsigned i = 0; i<K; i++){
-            if (tmpu%(RD+1) < RD){
-                extbit++;
-            }
-            tmpu /= (RD+1);
-        }
-        if (extbit < R){
-            continue;
-        }
-        */
-
         double uy = fusRD[u].first;
         for (unsigned i = 0; i<levF.size(); i++){
             int x = levF[i].first;
@@ -617,7 +615,7 @@ vector<int> Sched::gettimetable(vector<int> list){
             }
             FUSRDTYPE::iterator ft;
             if ((ft = fusRD.find(v)) == fusRD.end()){
-                fusRD[v] = make_pair(y, x);
+                fusRD[v] = make_pair(uy + y, x);
                 queRD.push_back(v);
             }else{
                 double vy = ft->second.first;
@@ -661,13 +659,17 @@ vector<int> Sched::gettimetable(vector<int> list){
     }
     ferr<<"---timetable size: "<<seq.size()<<endl;
     for (signed i = 0; i<seq.size(); i++){
+		vector<int> ids;
         for (int j = K-1; j>=0; j--){
             if (seq[i] & (1<<j)){
                 ferr<<'1';
+				ids.push_back(list[j]);
             }else{
                 ferr<<'0';
             }
         }
+		double wl = getfpworkload(ids);
+		ferr<<"\t"<<wl;
         ferr<<endl;
     }
     ferr<<"---timetable end---"<<endl;
@@ -724,7 +726,7 @@ void Sched::timeinterrupt(){
             runtask(wtr[i]);
         }
         sem_post(&arrmtx);
-        sleep(50);
+        sleep(10);
     }
     ferr<<"thread: _timeinterrupt end"<<endl;
 }

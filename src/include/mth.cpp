@@ -53,13 +53,13 @@ int getpid(string cmd){
     //cmd = " " + cmd + "\n";
     FILE *fp = popen("ps -ao pid,command", "r");
     assert(fp);
-    int pid, tpid;
+    int pid = -1, tpid;
     char pscmd[500];
     bool findit = false;
     while (fscanf(fp, "%d", &tpid)!=EOF){
         fgets(pscmd, 488, fp);
         if (strstr(pscmd, cmd.c_str())!=NULL && strstr(pscmd, "sh -c") == NULL){
-            pid = tpid;
+			if (tpid > pid) pid = tpid;
             findit = true;
         }
     }
