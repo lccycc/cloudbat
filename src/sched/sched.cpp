@@ -9,7 +9,7 @@ void Sched::init(int _KPP, int _P){
 	fscanf(fin, "bandwith %lf\n", &bandwith);
 	bandwith/=64;
 	/* for prefetch */
-	bandwith /= 2;
+	//bandwith /= 2;
 	fscanf(fin, "speccmd %s\n", tmp);
 	speccmd = string(tmp);
 	int cpuid, cpunum;
